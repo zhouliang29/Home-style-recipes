@@ -22,10 +22,19 @@ body {
 a { color: inherit; text-decoration: none; }
 input, textarea, select, button { font: inherit; }
 .card { border: 1px solid #fed7aa; background: rgba(255,255,255,.88); border-radius: 1.25rem; box-shadow: 0 10px 30px rgba(154, 52, 18, .08); }
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border-radius: 999px; padding: .7rem 1rem; background: #f97316; color: white; font-weight: 700; border: 0; cursor: pointer; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border-radius: 999px; padding: .7rem 1rem; background: #f97316; color: white; font-weight: 700; border: 0; cursor: pointer; transition: opacity .15s; }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
 .btn.secondary { background: #ffedd5; color: #9a3412; }
 .btn.danger { background: #dc2626; color: white; }
-.field { width: 100%; border: 1px solid #fdba74; background: white; border-radius: .85rem; padding: .75rem .9rem; }
+.field { width: 100%; border: 1px solid #fdba74; background: white; border-radius: .85rem; padding: .75rem .9rem; font-size: 1rem; /* 防止 iOS 缩放 */ }
 .label { display: grid; gap: .35rem; font-weight: 700; color: #7c2d12; }
 .muted { color: #9a6a45; }
 .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+/* 手机端单列卡片 */
+@media (max-width: 480px) {
+  .grid-cards { grid-template-columns: 1fr; }
+}
+/* iOS 安全区域（底部导航栏） */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-nav-safe { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+}
