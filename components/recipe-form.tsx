@@ -75,9 +75,9 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
       <section className="card grid gap-4 p-5"><h2 className="font-black text-orange-700">基本信息</h2>
         <label className="label">菜名 <span className="text-red-500">*</span><input className="field" name="title" defaultValue={recipe?.title} required placeholder="例如：番茄炒蛋" /></label>
         <label className="label">简介<textarea className="field" name="description" defaultValue={recipe?.description || ""} rows={2} placeholder="简单描述这道菜" /></label>
-        <label className="label">封面图 <span className="text-red-500">*</span>
-          <input className="field text-sm" name="coverImage" type="file" accept="image/jpeg,image/png,image/webp" required onChange={handleImageChange} />
-          <span className="text-xs text-orange-400">支持 JPG/PNG/WebP，最大 5MB</span>
+        <label className="label">封面图 {!isEdit && <span className="text-red-500">*</span>}
+          <input className="field text-sm" name="coverImage" type="file" accept="image/jpeg,image/png,image/webp" required={!isEdit} onChange={handleImageChange} />
+          <span className="text-xs text-orange-400">支持 JPG/PNG/WebP，最大 5MB{isEdit ? "，不选则保留原图" : ""}</span>
         </label>
         {imagePreview && (
           <div className="overflow-hidden rounded-2xl">
@@ -119,12 +119,16 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
         <textarea className="field" name="tips" defaultValue={recipe?.tips || ""} rows={2} placeholder="可选，比如关键火候、替代食材等" />
       </section>
 
-      {/* 提交按钮 - sticky 防止被底部导航遮挡 */}
-      <div className="sticky bottom-20 z-10">
-        <button className="btn w-full py-4 text-lg shadow-lg" type="submit" disabled={isPending}>
-          {isPending ? "保存中..." : isEdit ? "保存修改" : "创建菜谱"}
-        </button>
+      {/* 提交按钮 - 固定底部，始终可见，不被导航栏遮挡 */}
+      <div className="fixed bottom-16 left-0 right-0 z-40 bg-white/95 backdrop-blur px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,.1)]">
+        <div className="mx-auto max-w-5xl">
+          <button className="btn w-full py-4 text-lg" type="submit" disabled={isPending}>
+            {isPending ? "保存中..." : isEdit ? "保存修改" : "创建菜谱"}
+          </button>
+        </div>
       </div>
+      {/* 底部留白，防止内容被固定按钮遮挡 */}
+      <div className="h-24" />
     </form>
   );
 }
