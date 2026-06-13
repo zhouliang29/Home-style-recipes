@@ -29,7 +29,7 @@ export const recipeInputSchema = z.object({
     .array(
       z.object({ content: z.string().trim().min(1, "步骤不能为空") }),
     )
-    .min(1, "至少添加一个步骤"),
+    .optional().default([]),
 });
 
 export type RecipeInput = z.infer<typeof recipeInputSchema>;

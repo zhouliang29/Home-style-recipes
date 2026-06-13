@@ -14,14 +14,13 @@ describe("recipeInputSchema", () => {
     expect(parsed.ingredients).toHaveLength(1);
   });
 
-  it("rejects empty title and missing steps with friendly validation errors", () => {
+  it("rejects empty title with friendly validation error", () => {
     const result = recipeInputSchema.safeParse({ title: " ", difficulty: "easy", ingredients: [], steps: [] });
 
     expect(result.success).toBe(false);
     if (!result.success) {
       const messages = result.error.issues.map((issue) => issue.message);
       expect(messages).toContain("菜名不能为空");
-      expect(messages).toContain("至少添加一个步骤");
     }
   });
 });

@@ -75,9 +75,8 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
       <section className="card grid gap-4 p-5"><h2 className="font-black text-orange-700">基本信息</h2>
         <label className="label">菜名 <span className="text-red-500">*</span><input className="field" name="title" defaultValue={recipe?.title} required placeholder="例如：番茄炒蛋" /></label>
         <label className="label">简介<textarea className="field" name="description" defaultValue={recipe?.description || ""} rows={2} placeholder="简单描述这道菜" /></label>
-        <label className="label">
-          封面图
-          <input className="field text-sm" name="coverImage" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={handleImageChange} />
+        <label className="label">封面图 <span className="text-red-500">*</span>
+          <input className="field text-sm" name="coverImage" type="file" accept="image/jpeg,image/png,image/webp" required onChange={handleImageChange} />
           <span className="text-xs text-orange-400">支持 JPG/PNG/WebP，最大 5MB</span>
         </label>
         {imagePreview && (
@@ -110,7 +109,7 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
       </section>
 
       {/* 做法步骤 - 手机优化 */}
-      <section className="card p-5 space-y-3"><h2 className="font-black text-orange-700">做法步骤 <span className="text-red-500 text-xl">*</span></h2>
+      <section className="card p-5 space-y-3"><h2 className="font-black text-orange-700">做法步骤（选填）</h2>
         <textarea className="field min-h-[160px]" rows={8} placeholder={"每行一个步骤，例如：\n鸡蛋打散，加少许盐\n热锅凉油，炒熟鸡蛋盛出\n放入番茄翻炒出汁\n倒回鸡蛋翻炒均匀"} value={stepText} onChange={(e) => setStepText(e.target.value)} />
         <span className="text-xs text-orange-400">已输入 {stepText.split("\n").filter((s) => s.trim()).length} 个步骤</span>
       </section>
