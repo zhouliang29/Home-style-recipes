@@ -119,10 +119,12 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
         <textarea className="field" name="tips" defaultValue={recipe?.tips || ""} rows={2} placeholder="可选，比如关键火候、替代食材等" />
       </section>
 
-      {/* 提交按钮 */}
-      <button className="btn w-full py-4 text-lg" type="submit" disabled={isPending}>
-        {isPending ? "保存中..." : isEdit ? "保存修改" : "创建菜谱"}
-      </button>
+      {/* 提交按钮 - sticky 防止被底部导航遮挡 */}
+      <div className="sticky bottom-20 z-10">
+        <button className="btn w-full py-4 text-lg shadow-lg" type="submit" disabled={isPending}>
+          {isPending ? "保存中..." : isEdit ? "保存修改" : "创建菜谱"}
+        </button>
+      </div>
     </form>
   );
 }

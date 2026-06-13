@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { FavoriteButton } from "@/components/favorite-button";
 import { CookedButton } from "@/components/cooked-button";
 import { AddToMenuDialog } from "@/components/add-to-menu-dialog";
+import { DeleteRecipeButton } from "@/components/delete-recipe-button";
 import { PageTitle } from "@/components/ui-blocks";
 import Link from "next/link";
 
@@ -31,5 +32,6 @@ export default async function RecipeDetailPage(props: { params: Promise<{ id: st
     </section>
     {recipe.tips ? <section className="card p-5"><h2 className="mb-2 font-black text-orange-700">小贴士</h2><p className="muted">{recipe.tips}</p></section> : null}
     <p className="muted text-sm">创建者：{recipe.createdByName || "未知"} · 更新于 {new Date(recipe.updatedAt).toLocaleDateString("zh-CN")}</p>
+    {canEditRecipe(user, recipe) && <DeleteRecipeButton recipeId={recipe.id} recipeTitle={recipe.title} />}
   </div>;
 }
