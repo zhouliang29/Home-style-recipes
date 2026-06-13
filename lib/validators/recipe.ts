@@ -24,7 +24,7 @@ export const recipeInputSchema = z.object({
         group: z.enum(["main", "seasoning"]).default("main"),
       }),
     )
-    .min(1, "至少添加一种食材"),
+    .optional().default([]),
   steps: z
     .array(
       z.object({ content: z.string().trim().min(1, "步骤不能为空") }),
