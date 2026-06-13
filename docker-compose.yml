@@ -1,0 +1,16 @@
+services:
+  family-recipes:
+    build: .
+    container_name: family-recipes
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=/app/data/app.db
+      - AUTH_SECRET=${AUTH_SECRET}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-change-me}
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads

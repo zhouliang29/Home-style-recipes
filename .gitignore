@@ -20,9 +20,14 @@
 # production
 /build
 
+# app runtime data
+/data
+/uploads
+
 # misc
 .DS_Store
 *.pem
+.atomcode/
 
 # debug
 npm-debug.log*
