@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useState, useEffect } from "react";
+import { useState, useRef, useTransition } from "react";
 import { createRecipe, updateRecipe } from "@/app/recipes/actions";
 import { PageTitle } from "@/components/ui-blocks";
 import type { Category, RecipeDetail } from "@/lib/types";
@@ -26,6 +26,11 @@ function isImageType(file: File): { ok: boolean; msg?: string } {
 
 export function RecipeForm({ categories, recipe }: { categories: Category[]; recipe?: RecipeDetail; userId?: string }) {
   const isEdit = !!recipe;
+  const formRef = useRef<HTMLFormElement>(null);
+  const [isPending, startTransition] = useTransition();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
   const [ingredients, setIngredients] = useState<IngItem[]>(
     recipe?.ingredients.map((i: { name: string; amount?: string | null; group: "main" | "seasoning" }) => ({ name: i.name, amount: i.amount || "", group: i.group })) || []
   );
@@ -36,40 +41,6 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
   const [imagePreview, setImagePreview] = useState<string | null>(recipe?.coverImageUrl || null);
   const [imageFile, setImageFile] = useState<{ name: string; size: string } | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  type FormState = { ok?: boolean; id?: string; error?: string } | null;
-  const [state, formAction, isPending] = useActionState(
-    async (_prev: FormState, formData: FormData): Promise<FormState> => {
-      setSubmitError(null);
-      try {
-        const result = isEdit
-          ? await updateRecipe(recipe!.id, formData)
-          : await createRecipe(formData);
-        return result as FormState;
-      } catch (e: unknown) {
-        // redirect() 异常需要重新抛出，不能吞掉
-        if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
-        if (e && typeof e === "object" && "digest" in e && String((e as { digest: unknown }).digest).startsWith("NEXT_")) throw e;
-        return { error: e instanceof Error ? e.message : "保存失败，请重试" };
-      }
-    },
-    null as FormState
-  );
-
-  // 成功时导航
-  useEffect(() => {
-    if (state?.ok) {
-      if (isEdit && recipe) {
-        window.location.href = `/recipes/${recipe.id}`;
-      } else if (state?.id) {
-        window.location.href = `/recipes/${state.id}`;
-      }
-    } else if (state?.error) {
-      setSubmitError(state.error);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, [state, isEdit, recipe]);
 
   function addIng(group: "main" | "seasoning") { setIngredients([...ingredients, { name: "", amount: "", group }]); }
   function updateIng(i: number, field: keyof IngItem, value: string) { const copy = [...ingredients]; copy[i] = { ...copy[i], [field]: value }; setIngredients(copy); }
@@ -79,18 +50,15 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
     const file = e.target.files?.[0];
     if (!file) { setImageFile(null); setImageError(null); return; }
 
-    // 显示文件信息
     setImageFile({ name: file.name, size: fileSizeDisplay(file.size) });
     setImageError(null);
 
-    // 客户端校验：大小
     if (file.size > 5 * 1024 * 1024) {
       setImageError(`图片 ${fileSizeDisplay(file.size)}，超过 5MB 限制，请压缩后重试`);
       e.target.value = "";
       setImagePreview(null);
       return;
     }
-    // 客户端校验：格式（兼容 Android file.type 为空）
     const typeCheck = isImageType(file);
     if (!typeCheck.ok) {
       setImageError(typeCheck.msg || "不支持该图片格式");
@@ -98,17 +66,73 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
       setImagePreview(null);
       return;
     }
-
     setImagePreview(URL.createObjectURL(file));
   }
 
+  // 客户端校验：提交前检查必填项，给手机浏览器明确提示
+  function validateAndSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSubmitError(null);
+
+    const form = formRef.current;
+    if (!form) return;
+
+    // 利用浏览器原生校验，但手动报告
+    const titleInput = form.querySelector<HTMLInputElement>('input[name="title"]');
+    if (titleInput && !titleInput.value.trim()) {
+      setSubmitError("菜名不能为空");
+      titleInput.focus();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    const formData = new FormData(form);
+    // 注入动态数据
+    formData.set("ingredients", JSON.stringify(ingredients.filter((i) => i.name.trim())));
+    formData.set("steps", JSON.stringify(stepText.split("\n").map(s => s.trim()).filter(Boolean).map(c => ({ content: c }))));
+
+    startTransition(async () => {
+      try {
+        const result = isEdit
+          ? await updateRecipe(recipe!.id, formData)
+          : await createRecipe(formData);
+
+        if ("error" in result && result.error) {
+          setSubmitError(result.error);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+
+        // 成功
+        setSubmitSuccess(true);
+        if (isEdit && recipe) {
+          window.location.href = `/recipes/${recipe.id}`;
+        } else if ("id" in result && result.id) {
+          window.location.href = `/recipes/${result.id}`;
+        } else {
+          window.location.href = "/recipes";
+        }
+      } catch (err: unknown) {
+        // redirect() 异常需要重新抛出
+        if (err && typeof err === "object" && "digest" in err) {
+          const digest = String((err as { digest: unknown }).digest);
+          if (digest.startsWith("NEXT_")) {
+            // redirect 被抛出，说明 requireUser 检测到未登录，让框架处理
+            window.location.href = "/login";
+            return;
+          }
+        }
+        setSubmitError(err instanceof Error ? err.message : "保存失败，请重试");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  }
+
   return (
-    <form action={formAction} className="space-y-6" encType="multipart/form-data">
+    <form ref={formRef} onSubmit={validateAndSubmit} className="space-y-6" encType="multipart/form-data">
       <PageTitle title={isEdit ? "编辑菜谱" : "新增菜谱"} />
 
-      {/* hidden input 把计算后的数据注入 FormData */}
-      <input type="hidden" name="ingredients" value={JSON.stringify(ingredients.filter((i) => i.name.trim()))} />
-      <input type="hidden" name="steps" value={JSON.stringify(stepText.split("\n").map(s => s.trim()).filter(Boolean).map(c => ({ content: c })))} />
+      {/* 隐藏字段 — 由 onSubmit 动态注入 FormData，不放在 DOM 里避免值不同步 */}
 
       {/* 错误提示 */}
       {submitError && (
@@ -117,9 +141,16 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
         </div>
       )}
 
+      {/* 成功提示 */}
+      {submitSuccess && (
+        <div className="rounded-2xl border-2 border-green-300 bg-green-50 p-4 text-center font-bold text-green-700">
+          ✅ 保存成功，正在跳转…
+        </div>
+      )}
+
       {/* 基本信息 */}
       <section className="card grid gap-4 p-5"><h2 className="font-black text-orange-700">基本信息</h2>
-        <label className="label">菜名 <span className="text-red-500">*</span><input className="field" name="title" defaultValue={recipe?.title} required placeholder="例如：番茄炒蛋" /></label>
+        <label className="label">菜名 <span className="text-red-500">*</span><input className="field" name="title" defaultValue={recipe?.title} placeholder="例如：番茄炒蛋" /></label>
         <label className="label">简介<textarea className="field" name="description" defaultValue={recipe?.description || ""} rows={2} placeholder="简单描述这道菜" /></label>
         <label className="label">封面图（选填）
           <input className="field text-sm" name="coverImage" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} />
@@ -174,9 +205,13 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
         <textarea className="field" name="tips" defaultValue={recipe?.tips || ""} rows={2} placeholder="可选，比如关键火候、替代食材等" />
       </section>
 
-      {/* 提交按钮 */}
-      <button className="btn w-full py-4 text-lg" type="submit" disabled={isPending}>
-        {isPending ? "保存中..." : isEdit ? "保存修改" : "创建菜谱"}
+      {/* 提交按钮 — mobile-action 确保 touch 响应 */}
+      <button
+        className={`btn mobile-action w-full py-4 text-lg ${isPending ? "opacity-60" : ""}`}
+        type="submit"
+        disabled={isPending || submitSuccess}
+      >
+        {isPending ? "保存中…" : isEdit ? "保存修改" : "创建菜谱"}
       </button>
     </form>
   );
