@@ -1,11 +1,9 @@
 "use client";
 import { useActionState, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { archiveRecipeAction } from "@/app/recipes/actions";
 
 export function DeleteRecipeButton({ recipeId, recipeTitle }: { recipeId: string; recipeTitle: string }) {
   const [confirming, setConfirming] = useState(false);
-  const router = useRouter();
   type DeleteState = { ok?: boolean; error?: string } | null;
   const [state, formAction, isPending] = useActionState(
     async (_prev: DeleteState) => {
@@ -15,8 +13,8 @@ export function DeleteRecipeButton({ recipeId, recipeTitle }: { recipeId: string
   );
 
   useEffect(() => {
-    if (state?.ok) router.push("/recipes");
-  }, [state, router]);
+    if (state?.ok) window.location.href = "/recipes";
+  }, [state]);
 
   if (!confirming) {
     return (

@@ -1,6 +1,5 @@
 "use client";
 import { useActionState, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { createRecipe, updateRecipe } from "@/app/recipes/actions";
 import { PageTitle } from "@/components/ui-blocks";
 import type { Category, RecipeDetail } from "@/lib/types";
@@ -15,7 +14,6 @@ function fileSizeDisplay(bytes: number): string {
 
 export function RecipeForm({ categories, recipe }: { categories: Category[]; recipe?: RecipeDetail; userId?: string }) {
   const isEdit = !!recipe;
-  const router = useRouter();
   const [ingredients, setIngredients] = useState<IngItem[]>(
     recipe?.ingredients.map((i: { name: string; amount?: string | null; group: "main" | "seasoning" }) => ({ name: i.name, amount: i.amount || "", group: i.group })) || []
   );
@@ -45,14 +43,14 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
   useEffect(() => {
     if (state?.ok) {
       if (isEdit && recipe) {
-        router.push(`/recipes/${recipe.id}`);
+        window.location.href = `/recipes/${recipe.id}`;
       } else if (state?.id) {
-        router.push(`/recipes/${state.id}`);
+        window.location.href = `/recipes/${state.id}`;
       }
     } else if (state?.error) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  }, [state, router, isEdit, recipe]);
+  }, [state, isEdit, recipe]);
 
   function addIng(group: "main" | "seasoning") { setIngredients([...ingredients, { name: "", amount: "", group }]); }
   function updateIng(i: number, field: keyof IngItem, value: string) { const copy = [...ingredients]; copy[i] = { ...copy[i], [field]: value }; setIngredients(copy); }
