@@ -1,6 +1,5 @@
 "use client";
-import { useState, useRef, useTransition } from "react";
-import { createRecipe, updateRecipe } from "@/app/recipes/actions";
+import { useState, useRef } from "react";
 import { PageTitle } from "@/components/ui-blocks";
 import type { Category, RecipeDetail } from "@/lib/types";
 
@@ -27,17 +26,16 @@ function isImageType(file: File): { ok: boolean; msg?: string } {
 export function RecipeForm({ categories, recipe }: { categories: Category[]; recipe?: RecipeDetail; userId?: string }) {
   const isEdit = !!recipe;
   const formRef = useRef<HTMLFormElement>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const [ingredients, setIngredients] = useState<IngItem[]>(
     recipe?.ingredients.map((i: { name: string; amount?: string | null; group: "main" | "seasoning" }) => ({ name: i.name, amount: i.amount || "", group: i.group })) || []
   );
-  const [steps] = useState<{ content: string }[]>(
-    recipe?.steps.map((s: { content: string }) => ({ content: s.content })) || []
+  const [stepText, setStepText] = useState(
+    recipe?.steps.map((s: { content: string }) => s.content).join("\n") || ""
   );
-  const [stepText, setStepText] = useState(steps.map((s: { content: string }) => s.content).join("\n"));
   const [imagePreview, setImagePreview] = useState<string | null>(recipe?.coverImageUrl || null);
   const [imageFile, setImageFile] = useState<{ name: string; size: string } | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -69,15 +67,15 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
     setImagePreview(URL.createObjectURL(file));
   }
 
-  // 客户端校验：提交前检查必填项，给手机浏览器明确提示
-  function validateAndSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // 用 fetch POST 到 API Route — 所有浏览器 100% 兼容
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitError(null);
 
     const form = formRef.current;
     if (!form) return;
 
-    // 利用浏览器原生校验，但手动报告
+    // 客户端校验菜名
     const titleInput = form.querySelector<HTMLInputElement>('input[name="title"]');
     if (titleInput && !titleInput.value.trim()) {
       setSubmitError("菜名不能为空");
@@ -87,52 +85,45 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
     }
 
     const formData = new FormData(form);
-    // 注入动态数据
     formData.set("ingredients", JSON.stringify(ingredients.filter((i) => i.name.trim())));
     formData.set("steps", JSON.stringify(stepText.split("\n").map(s => s.trim()).filter(Boolean).map(c => ({ content: c }))));
+    if (isEdit && recipe) formData.set("id", recipe.id);
 
-    startTransition(async () => {
-      try {
-        const result = isEdit
-          ? await updateRecipe(recipe!.id, formData)
-          : await createRecipe(formData);
+    setIsPending(true);
+    try {
+      const res = await fetch("/api/recipes", { method: "POST", body: formData });
+      const data = await res.json();
 
-        if ("error" in result && result.error) {
-          setSubmitError(result.error);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          return;
-        }
-
-        // 成功
-        setSubmitSuccess(true);
-        if (isEdit && recipe) {
-          window.location.href = `/recipes/${recipe.id}`;
-        } else if ("id" in result && result.id) {
-          window.location.href = `/recipes/${result.id}`;
-        } else {
-          window.location.href = "/recipes";
-        }
-      } catch (err: unknown) {
-        // redirect() 异常需要重新抛出
-        if (err && typeof err === "object" && "digest" in err) {
-          const digest = String((err as { digest: unknown }).digest);
-          if (digest.startsWith("NEXT_")) {
-            // redirect 被抛出，说明 requireUser 检测到未登录，让框架处理
-            window.location.href = "/login";
-            return;
-          }
-        }
-        setSubmitError(err instanceof Error ? err.message : "保存失败，请重试");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+      if (data.needLogin) {
+        window.location.href = "/login";
+        return;
       }
-    });
+      if (data.error) {
+        setSubmitError(data.error);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      // 成功
+      setSubmitSuccess(true);
+      if (isEdit && recipe) {
+        window.location.href = `/recipes/${recipe.id}`;
+      } else if (data.id) {
+        window.location.href = `/recipes/${data.id}`;
+      } else {
+        window.location.href = "/recipes";
+      }
+    } catch (err) {
+      setSubmitError("网络错误，请检查连接后重试");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
-    <form ref={formRef} onSubmit={validateAndSubmit} className="space-y-6" encType="multipart/form-data">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6" encType="multipart/form-data">
       <PageTitle title={isEdit ? "编辑菜谱" : "新增菜谱"} />
-
-      {/* 隐藏字段 — 由 onSubmit 动态注入 FormData，不放在 DOM 里避免值不同步 */}
 
       {/* 错误提示 */}
       {submitError && (
