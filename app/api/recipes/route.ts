@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
       description: formData.get("description") || "",
       categoryId: formData.get("categoryId") || null,
       difficulty: formData.get("difficulty") || "easy",
+      chef: formData.get("chef") || null,
       prepTimeMinutes: formData.get("prepTimeMinutes"),
       cookTimeMinutes: formData.get("cookTimeMinutes"),
       servings: formData.get("servings"),

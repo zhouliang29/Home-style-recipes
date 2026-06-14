@@ -10,10 +10,11 @@ const roleLabel: Record<string, string> = {
 
 export function UserMenu({ username, role }: { username?: string; role?: string }) {
   const [open, setOpen] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const portalRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, right: 0 });
 
-  // 计算下拉菜单位置（相对于按钮）
   function updatePos() {
     if (!btnRef.current) return;
     const rect = btnRef.current.getBoundingClientRect();
@@ -32,22 +33,26 @@ export function UserMenu({ username, role }: { username?: string; role?: string 
     }
   }, [open]);
 
-  // 点击外部关闭
+  // 点击外部关闭（排除 portal 内的点击）
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
-      if (btnRef.current && btnRef.current.contains(e.target as Node)) return;
+      const target = e.target as Node;
+      if (btnRef.current?.contains(target)) return;
+      if (portalRef.current?.contains(target)) return;
       setOpen(false);
+      setConfirmLogout(false);
     }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    // 用 mouseup 而非 mousedown，避免先关闭导致 Link 导航中断
+    document.addEventListener("mouseup", handleClick);
+    return () => document.removeEventListener("mouseup", handleClick);
   }, [open]);
 
   // ESC 关闭
   useEffect(() => {
     if (!open) return;
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") { setOpen(false); setConfirmLogout(false); }
     }
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
@@ -59,7 +64,7 @@ export function UserMenu({ username, role }: { username?: string; role?: string 
         ref={btnRef}
         type="button"
         className="flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 font-bold text-orange-800 ring-1 ring-orange-200 transition hover:bg-orange-100"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => { setOpen((v) => !v); setConfirmLogout(false); }}
         aria-expanded={open}
         aria-haspopup="true"
       >
@@ -75,6 +80,7 @@ export function UserMenu({ username, role }: { username?: string; role?: string 
 
       {open && createPortal(
         <div
+          ref={portalRef}
           className="fixed z-[9999] w-48 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-orange-100"
           style={{ top: pos.top, right: pos.right }}
         >
@@ -94,13 +100,37 @@ export function UserMenu({ username, role }: { username?: string; role?: string 
           >
             🔑 修改密码
           </Link>
-          <Link
-            href="/logout"
-            className="flex items-center gap-2 border-t border-orange-100 px-4 py-3 text-sm font-bold text-red-600 transition hover:bg-red-50"
-            onClick={() => setOpen(false)}
-          >
-            🚪 退出登录
-          </Link>
+
+          {/* 退出登录 */}
+          {!confirmLogout ? (
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 border-t border-orange-100 px-4 py-3 text-sm font-bold text-red-600 transition hover:bg-red-50"
+              onClick={() => setConfirmLogout(true)}
+            >
+              🚪 退出登录
+            </button>
+          ) : (
+            <div className="border-t border-orange-100 bg-red-50 px-4 py-3 space-y-2">
+              <p className="text-xs font-bold text-red-700">确定退出登录吗？</p>
+              <div className="flex gap-2">
+                <Link
+                  href="/logout"
+                  className="btn danger flex-1 py-1.5 text-xs"
+                  onClick={() => setOpen(false)}
+                >
+                  确认退出
+                </Link>
+                <button
+                  type="button"
+                  className="btn secondary flex-1 py-1.5 text-xs"
+                  onClick={() => setConfirmLogout(false)}
+                >
+                  取消
+                </button>
+              </div>
+            </div>
+          )}
         </div>,
         document.body
       )}

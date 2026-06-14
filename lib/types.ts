@@ -15,6 +15,7 @@ export type RecipeSummary = {
   categoryId?: string | null;
   categoryName?: string | null;
   difficulty: "easy" | "medium" | "hard";
+  chef?: string | null;
   prepTimeMinutes?: number | null;
   cookTimeMinutes?: number | null;
   servings?: number | null;

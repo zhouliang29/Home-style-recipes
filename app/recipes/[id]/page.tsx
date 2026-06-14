@@ -31,6 +31,7 @@ export default async function RecipeDetailPage(props: { params: Promise<{ id: st
       {/* 标签 */}
       <div className="flex flex-wrap gap-2 text-sm font-bold text-orange-700">
         <span className="rounded-full bg-orange-100 px-4 py-1.5">{difficulty[recipe.difficulty]}</span>
+        {recipe.chef ? <span className="rounded-full bg-orange-100 px-4 py-1.5">👨‍🍳 {recipe.chef}</span> : null}
         {recipe.prepTimeMinutes ? <span className="rounded-full bg-orange-100 px-4 py-1.5">⏱ 准备 {recipe.prepTimeMinutes} 分钟</span> : null}
         {recipe.cookTimeMinutes ? <span className="rounded-full bg-orange-100 px-4 py-1.5">🔥 烹饪 {recipe.cookTimeMinutes} 分钟</span> : null}
         {recipe.servings ? <span className="rounded-full bg-orange-100 px-4 py-1.5">🍽 {recipe.servings} 份</span> : null}

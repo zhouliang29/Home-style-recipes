@@ -1,5 +1,5 @@
 import { z } from "zod";
-
+import { CHEF_OPTIONS } from "@/lib/constants";
 const positiveOptionalInt = z.coerce
   .number()
   .int("请输入整数")
@@ -12,6 +12,7 @@ export const recipeInputSchema = z.object({
   description: z.string().trim().optional().default(""),
   categoryId: z.string().trim().optional().nullable(),
   difficulty: z.enum(["easy", "medium", "hard"], { error: "请选择难度" }),
+  chef: z.enum(CHEF_OPTIONS, { error: "请选择厨师" }),
   prepTimeMinutes: positiveOptionalInt,
   cookTimeMinutes: positiveOptionalInt,
   servings: positiveOptionalInt,

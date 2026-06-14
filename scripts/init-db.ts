@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS recipes (
   cook_time_minutes INTEGER,
   servings INTEGER,
   tips TEXT,
+  chef TEXT,
   created_by_id TEXT NOT NULL REFERENCES users(id),
   is_archived INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000),
@@ -119,3 +120,15 @@ CREATE INDEX IF NOT EXISTS idx_shopping_items_list ON shopping_list_items(shoppi
 `);
 
 console.log(`Database initialized at ${dbPath}`);
+
+// 种子数据：分类
+const existingCats = db.prepare("SELECT COUNT(*) as cnt FROM categories").get() as { cnt: number };
+if (existingCats.cnt === 0) {
+  const insertCat = db.prepare("INSERT INTO categories (id, name, icon, sort_order) VALUES (?, ?, ?, ?)");
+  const seedCategories = [
+    { id: "zhouliang", name: "周良", icon: "👨‍🍳", sortOrder: 0 },
+    { id: "zhangxing", name: "张幸", icon: "👩‍🍳", sortOrder: 1 },
+  ];
+  for (const c of seedCategories) insertCat.run(c.id, c.name, c.icon, c.sortOrder);
+  console.log("Seed categories inserted");
+}

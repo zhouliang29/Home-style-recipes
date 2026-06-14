@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { PageTitle } from "@/components/ui-blocks";
+import { CHEF_OPTIONS } from "@/lib/constants";
 import type { Category, RecipeDetail } from "@/lib/types";
 
 type IngItem = { name: string; amount: string; group: "main" | "seasoning" };
@@ -163,9 +164,10 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
         )}
         <div className="grid gap-4 sm:grid-cols-3"><label className="label">分类<select className="field" name="categoryId" defaultValue={recipe?.categoryId || ""}><option value="">不选</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
         <label className="label">难度<select className="field" name="difficulty" defaultValue={recipe?.difficulty || "easy"}><option value="easy">简单</option><option value="medium">中等</option><option value="hard">费工夫</option></select></label>
+        <label className="label">厨师 <span className="text-red-500">*</span><select className="field" name="chef" defaultValue={recipe?.chef || ""}><option value="">请选择</option>{CHEF_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}</select></label></div>
+        <div className="grid gap-4 sm:grid-cols-3"><label className="label">准备时间（分钟）<input className="field" name="prepTimeMinutes" type="number" min={1} defaultValue={recipe?.prepTimeMinutes || ""} inputMode="numeric" /></label>
+        <label className="label">烹饪时间（分钟）<input className="field" name="cookTimeMinutes" type="number" min={1} defaultValue={recipe?.cookTimeMinutes || ""} inputMode="numeric" /></label>
         <label className="label">份量<input className="field" name="servings" type="number" min={1} defaultValue={recipe?.servings || ""} placeholder="2 人份" inputMode="numeric" /></label></div>
-        <div className="grid gap-4 sm:grid-cols-2"><label className="label">准备时间（分钟）<input className="field" name="prepTimeMinutes" type="number" min={1} defaultValue={recipe?.prepTimeMinutes || ""} inputMode="numeric" /></label>
-        <label className="label">烹饪时间（分钟）<input className="field" name="cookTimeMinutes" type="number" min={1} defaultValue={recipe?.cookTimeMinutes || ""} inputMode="numeric" /></label></div>
       </section>
 
       {/* 食材 */}

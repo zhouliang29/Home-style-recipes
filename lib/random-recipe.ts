@@ -3,6 +3,7 @@ export type RandomRecipeCandidate = {
   title: string;
   categoryId?: string | null;
   difficulty: "easy" | "medium" | "hard" | string;
+  chef?: string | null;
   cookTimeMinutes?: number | null;
   isArchived: boolean;
   lastCookedAt?: Date | number | string | null;
@@ -11,6 +12,7 @@ export type RandomRecipeCandidate = {
 export type RandomRecipeFilters = {
   categoryId?: string | null;
   difficulty?: "easy" | "medium" | "hard" | string | null;
+  chef?: string | null;
   maxCookTimeMinutes?: number | null;
   excludeRecentDays?: number | null;
   now?: Date;
@@ -38,6 +40,7 @@ export function pickRandomRecipe<T extends RandomRecipeCandidate>(
     if (recipe.isArchived) return false;
     if (filters.categoryId && recipe.categoryId !== filters.categoryId) return false;
     if (filters.difficulty && recipe.difficulty !== filters.difficulty) return false;
+    if (filters.chef && recipe.chef !== filters.chef) return false;
     if (
       filters.maxCookTimeMinutes &&
       recipe.cookTimeMinutes != null &&

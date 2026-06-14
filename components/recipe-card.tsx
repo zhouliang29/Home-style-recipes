@@ -19,6 +19,7 @@ export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
         <div className="mt-3 flex flex-wrap gap-1.5 text-xs font-bold text-orange-700">
           {recipe.categoryName && <span className="rounded-full bg-orange-100 px-2.5 py-1">{recipe.categoryName}</span>}
           <span className="rounded-full bg-orange-100 px-2.5 py-1">{difficulty[recipe.difficulty] ?? recipe.difficulty}</span>
+          {recipe.chef ? <span className="rounded-full bg-orange-100 px-2.5 py-1">👨‍🍳 {recipe.chef}</span> : null}
           {recipe.cookTimeMinutes ? <span className="rounded-full bg-orange-100 px-2.5 py-1">⏱ {recipe.cookTimeMinutes} 分钟</span> : null}
         </div>
       </div>

@@ -32,6 +32,7 @@ export const recipes = sqliteTable("recipes", {
   cookTimeMinutes: integer("cook_time_minutes"),
   servings: integer("servings"),
   tips: text("tips"),
+  chef: text("chef"),
   createdById: text("created_by_id").notNull().references(() => users.id),
   isArchived: integer("is_archived", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at").notNull().default(sql`(unixepoch() * 1000)`),
