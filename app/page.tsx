@@ -10,8 +10,8 @@ export default async function Home() {
   return (
     <div className="space-y-6">
       <section className="card bg-gradient-to-br from-orange-500 to-amber-500 p-6 text-white">
-        <p className="font-bold opacity-90">今天也好好吃饭</p>
-        <h1 className="mt-2 text-4xl font-black">家里的味道，都在这里</h1>
+        <p className="font-bold text-orange-100">今天也好好吃饭</p>
+        <h1 className="mt-2 text-4xl font-black text-white drop-shadow">家里的味道，都在这里</h1>
         <form action="/recipes" className="mt-5 flex gap-2">
           <input className="field text-orange-950" name="q" placeholder="搜菜名或食材，如 番茄、鸡蛋" />
           <button className="btn secondary" type="submit">搜索</button>

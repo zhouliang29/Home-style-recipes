@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { MobileNav } from "@/components/mobile-nav";
+import { UserMenu } from "@/components/user-menu";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -10,11 +11,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         <Link href="/" className="text-2xl font-black text-orange-600">🍲 家味菜谱</Link>
         <div className="flex items-center gap-3 text-sm">
           {user ? (
-            <>
-              <span className="hidden sm:inline muted">{user.name} · {user.role === "admin" ? "管理员" : "成员"}</span>
-              {user.role === "admin" && <Link className="font-bold text-orange-700" href="/settings/users">成员</Link>}
-              <Link className="font-bold text-orange-700" href="/logout">退出</Link>
-            </>
+            <UserMenu name={user.name} role={user.role} />
           ) : <Link className="btn" href="/login">登录</Link>}
         </div>
       </header>
