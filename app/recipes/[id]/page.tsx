@@ -1,8 +1,6 @@
 import { requireUser, canEditRecipe } from "@/lib/auth";
 import { getRecipe } from "@/lib/recipes";
 import { notFound } from "next/navigation";
-import { FavoriteButton } from "@/components/favorite-button";
-import { CookedButton } from "@/components/cooked-button";
 import { AddToMenuDialog } from "@/components/add-to-menu-dialog";
 import { DeleteRecipeButton } from "@/components/delete-recipe-button";
 import { PageTitle } from "@/components/ui-blocks";
@@ -40,8 +38,6 @@ export default async function RecipeDetailPage(props: { params: Promise<{ id: st
 
       {/* 操作按钮 */}
       <div className="flex flex-wrap gap-3">
-        <FavoriteButton recipeId={recipe.id} initialFavorite={recipe.isFavorite} />
-        <CookedButton recipeId={recipe.id} />
         <AddToMenuDialog recipeId={recipe.id} recipeTitle={recipe.title} />
       </div>
 

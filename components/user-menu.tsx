@@ -7,7 +7,7 @@ const roleLabel: Record<string, string> = {
   member: "成员",
 };
 
-export function UserMenu({ username, role }: { username: string; role: string }) {
+export function UserMenu({ username, role }: { username?: string; role?: string }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -43,17 +43,17 @@ export function UserMenu({ username, role }: { username: string; role: string })
         aria-haspopup="true"
       >
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-500 text-xs font-black text-white">
-          {username.charAt(0)}
+          {(username || "?").charAt(0)}
         </span>
-        <span className="max-w-[8rem] truncate">{username}</span>
-        <span className="text-xs text-orange-500">· {roleLabel[role] || role}</span>
+        <span className="max-w-[8rem] truncate">{username || "用户"}</span>
+        <span className="text-xs text-orange-500">· {roleLabel[role || "member"] || role}</span>
         <svg className={`h-4 w-4 text-orange-400 transition-transform ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-orange-100">
+        <div className="absolute right-0 z-[9999] mt-2 w-48 overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-orange-100">
           {role === "admin" && (
             <Link
               href="/settings/users"

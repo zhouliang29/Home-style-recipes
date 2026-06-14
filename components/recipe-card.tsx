@@ -12,9 +12,6 @@ export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
         ) : (
           <span className="opacity-60">🍳</span>
         )}
-        {recipe.isFavorite && (
-          <span className="absolute right-2 top-2 text-xl drop-shadow">⭐</span>
-        )}
       </div>
       <div className="p-4">
         <h3 className="text-lg font-black text-orange-800 line-clamp-1">{recipe.title}</h3>
