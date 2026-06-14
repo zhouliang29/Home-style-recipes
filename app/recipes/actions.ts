@@ -19,20 +19,19 @@ function formatError(e: unknown): { error: string } {
 }
 
 export async function createRecipe(formData: FormData) {
+  let id: string;
   try {
     const user = await requireUser();
     const raw = { title: formData.get("title") || "", description: formData.get("description") || "", categoryId: formData.get("categoryId") || null, difficulty: formData.get("difficulty") || "easy", prepTimeMinutes: formData.get("prepTimeMinutes"), cookTimeMinutes: formData.get("cookTimeMinutes"), servings: formData.get("servings"), tips: formData.get("tips") || "", ingredients: JSON.parse(String(formData.get("ingredients") || "[]")), steps: JSON.parse(String(formData.get("steps") || "[]")) };
     const input = recipeInputSchema.parse(raw);
     const coverImageUrl = await saveRecipeImage(formData.get("coverImage") as File | null);
-    const id = saveRecipe({ ...input, userId: user.id, coverImageUrl });
-    revalidatePath("/recipes");
-    revalidatePath("/");
-    redirect(`/recipes/${id}`);
+    id = saveRecipe({ ...input, userId: user.id, coverImageUrl });
   } catch (e) {
-    // redirect() 内部 throw NEXT_REDIRECT，不能拦截
-    if (e instanceof Error && e.message.startsWith("NEXT_REDIRECT")) throw e;
     return formatError(e);
   }
+  revalidatePath("/recipes");
+  revalidatePath("/");
+  redirect(`/recipes/${id}`);
 }
 
 export async function updateRecipe(recipeId: string, formData: FormData) {
@@ -42,14 +41,13 @@ export async function updateRecipe(recipeId: string, formData: FormData) {
     const input = recipeInputSchema.parse(raw);
     const coverImageUrl = await saveRecipeImage(formData.get("coverImage") as File | null);
     saveRecipe({ ...input, id: recipeId, userId: user.id, coverImageUrl });
-    revalidatePath(`/recipes/${recipeId}`);
-    revalidatePath("/recipes");
-    revalidatePath("/");
-    redirect(`/recipes/${recipeId}`);
   } catch (e) {
-    if (e instanceof Error && e.message.startsWith("NEXT_REDIRECT")) throw e;
     return formatError(e);
   }
+  revalidatePath(`/recipes/${recipeId}`);
+  revalidatePath("/recipes");
+  revalidatePath("/");
+  redirect(`/recipes/${recipeId}`);
 }
 
 export async function toggleFavoriteAction(recipeId: string) {
@@ -64,7 +62,6 @@ export async function archiveRecipeAction(recipeId: string) {
   await requireUser();
   archiveRecipe(recipeId);
   revalidatePath("/recipes");
-  redirect("/recipes");
 }
 
 export async function logCookedAction(formData: FormData) {

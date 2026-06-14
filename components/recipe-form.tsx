@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { createRecipe, updateRecipe } from "@/app/recipes/actions";
 import { PageTitle } from "@/components/ui-blocks";
 import type { Category, RecipeDetail } from "@/lib/types";
@@ -16,38 +16,16 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
   );
   const [stepText, setStepText] = useState(steps.map((s: { content: string }) => s.content).join("\n"));
   const [imagePreview, setImagePreview] = useState<string | null>(recipe?.coverImageUrl || null);
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!formRef.current) return;
-    setError(null);
-    setSubmitting(true);
-
-    try {
-      const fd = new FormData(formRef.current);
-      // 注入计算后的数据
-      fd.set("ingredients", JSON.stringify(ingredients.filter((i) => i.name.trim())));
-      const stepLines = stepText.split("\n").map((s) => s.trim()).filter(Boolean);
-      fd.set("steps", JSON.stringify(stepLines.map((content) => ({ content }))));
-
-      const result = isEdit
-        ? await updateRecipe(recipe!.id, fd)
-        : await createRecipe(fd);
-
-      // Server Action 成功时 redirect()，不会返回正常值
-      // 如果返回了 { error }，说明验证失败
-      if (result && typeof result === "object" && "error" in result) {
-        setError((result as { error: string }).error);
-      }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "保存失败，请重试");
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  // useActionState + 原生 Server Action — redirect 由框架处理，浏览器正常跳转
+  // 包一层适配 useActionState 的 (prevState, formData) 签名
+  const [state, formAction, isPending] = useActionState(
+    async (_prev: { error?: string } | null, formData: FormData) => {
+      if (isEdit) return await updateRecipe(recipe!.id, formData);
+      return await createRecipe(formData);
+    },
+    null as { error?: string } | null
+  );
 
   function addIng(group: "main" | "seasoning") { setIngredients([...ingredients, { name: "", amount: "", group }]); }
   function updateIng(i: number, field: keyof IngItem, value: string) { const copy = [...ingredients]; copy[i] = { ...copy[i], [field]: value }; setIngredients(copy); }
@@ -56,32 +34,25 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert("图片不能超过 5MB，请压缩后重试");
-      e.target.value = "";
-      return;
-    }
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      alert("只支持 JPG、PNG、WebP 格式的图片");
-      e.target.value = "";
-      return;
-    }
+    if (file.size > 5 * 1024 * 1024) { alert("图片不能超过 5MB，请压缩后重试"); e.target.value = ""; return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { alert("只支持 JPG、PNG、WebP 格式的图片"); e.target.value = ""; return; }
     setImagePreview(URL.createObjectURL(file));
   }
 
-  // 错误时自动滚动到顶部
-  useEffect(() => {
-    if (error) window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [error]);
+  useEffect(() => { if (state?.error) window.scrollTo({ top: 0, behavior: "smooth" }); }, [state?.error]);
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6" encType="multipart/form-data">
+    <form action={formAction} className="space-y-6" encType="multipart/form-data">
       <PageTitle title={isEdit ? "编辑菜谱" : "新增菜谱"} />
 
+      {/* hidden input 把计算后的数据注入 FormData，传给 Server Action */}
+      <input type="hidden" name="ingredients" value={JSON.stringify(ingredients.filter((i) => i.name.trim()))} />
+      <input type="hidden" name="steps" value={JSON.stringify(stepText.split("\n").map(s => s.trim()).filter(Boolean).map(c => ({ content: c })))} />
+
       {/* 错误提示 */}
-      {error && (
+      {state?.error && (
         <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-4 text-center font-bold text-red-700">
-          ⚠️ {error}
+          ⚠️ {state.error}
         </div>
       )}
 
@@ -134,8 +105,8 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
       </section>
 
       {/* 提交按钮 */}
-      <button className="btn w-full py-4 text-lg" type="submit" disabled={submitting}>
-        {submitting ? "保存中..." : isEdit ? "保存修改" : "创建菜谱"}
+      <button className="btn w-full py-4 text-lg" type="submit" disabled={isPending}>
+        {isPending ? "保存中..." : isEdit ? "保存修改" : "创建菜谱"}
       </button>
     </form>
   );
