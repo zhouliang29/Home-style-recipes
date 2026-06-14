@@ -121,8 +121,8 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
       <section className="card grid gap-4 p-5"><h2 className="font-black text-orange-700">基本信息</h2>
         <label className="label">菜名 <span className="text-red-500">*</span><input className="field" name="title" defaultValue={recipe?.title} required placeholder="例如：番茄炒蛋" /></label>
         <label className="label">简介<textarea className="field" name="description" defaultValue={recipe?.description || ""} rows={2} placeholder="简单描述这道菜" /></label>
-        <label className="label">封面图 {!isEdit && <span className="text-red-500">*</span>}
-          <input className="field text-sm" name="coverImage" type="file" accept="image/jpeg,image/png,image/webp" required={!isEdit} onChange={handleImageChange} />
+        <label className="label">封面图（选填）
+          <input className="field text-sm" name="coverImage" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} />
           {imageFile && !imageError && (
             <span className="text-xs text-green-600">📎 {imageFile.name}（{imageFile.size}）</span>
           )}
@@ -130,7 +130,7 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
             <span className="text-xs text-red-600">❌ {imageError}</span>
           )}
           {!imageFile && !imageError && (
-            <span className="text-xs text-orange-400">支持 JPG/PNG/WebP，最大 5MB{isEdit ? "，不选则保留原图" : ""}</span>
+            <span className="text-xs text-orange-400">支持 JPG/PNG/WebP，最大 5MB，不选则无封面图</span>
           )}
         </label>
         {imagePreview && (
