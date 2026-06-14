@@ -17,6 +17,19 @@ function formatError(e: unknown): { error: string } {
   return { error: "保存失败，请重试" };
 }
 
+/**
+ * 检查是否是 Next.js 内部 redirect 异常，不能被 try/catch 吞掉。
+ * Next.js 的 redirect() 通过抛出带 NEXT_REDIRECT digest 的特殊异常实现，
+ * 必须让它们冒泡到框架层才能正确处理跳转。
+ */
+function isNextInternalError(e: unknown): boolean {
+  if (e && typeof e === "object" && "digest" in e) {
+    const digest = String((e as { digest: unknown }).digest);
+    if (digest.startsWith("NEXT_")) return true;
+  }
+  return false;
+}
+
 export async function createRecipe(formData: FormData): Promise<{ ok: true; id: string } | { error: string }> {
   try {
     const user = await requireUser();
@@ -28,6 +41,8 @@ export async function createRecipe(formData: FormData): Promise<{ ok: true; id: 
     revalidatePath("/");
     return { ok: true, id };
   } catch (e) {
+    // redirect() 等内部异常必须重新抛出，否则客户端无反应
+    if (isNextInternalError(e)) throw e;
     return formatError(e);
   }
 }
@@ -41,9 +56,9 @@ export async function updateRecipe(recipeId: string, formData: FormData): Promis
     saveRecipe({ ...input, id: recipeId, userId: user.id, coverImageUrl });
     return { ok: true };
   } catch (e) {
+    if (isNextInternalError(e)) throw e;
     return formatError(e);
-  }
-  finally {
+  } finally {
     revalidatePath(`/recipes/${recipeId}`);
     revalidatePath("/recipes");
     revalidatePath("/");
@@ -64,6 +79,7 @@ export async function archiveRecipeAction(recipeId: string): Promise<{ ok: true 
     archiveRecipe(recipeId);
     return { ok: true };
   } catch (e) {
+    if (isNextInternalError(e)) throw e;
     return { error: e instanceof Error ? e.message : "删除失败" };
   } finally {
     revalidatePath(`/recipes/${recipeId}`);

@@ -6,8 +6,15 @@ export function DeleteRecipeButton({ recipeId, recipeTitle }: { recipeId: string
   const [confirming, setConfirming] = useState(false);
   type DeleteState = { ok?: boolean; error?: string } | null;
   const [state, formAction, isPending] = useActionState(
-    async (_prev: DeleteState) => {
-      return (await archiveRecipeAction(recipeId)) as DeleteState;
+    async (_prev: DeleteState, _formData: FormData): Promise<DeleteState> => {
+      try {
+        return (await archiveRecipeAction(recipeId)) as DeleteState;
+      } catch (e: unknown) {
+        // redirect() 异常需要重新抛出
+        if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+        if (e && typeof e === "object" && "digest" in e && String((e as { digest: unknown }).digest).startsWith("NEXT_")) throw e;
+        return { error: e instanceof Error ? e.message : "删除失败" };
+      }
     },
     null as DeleteState
   );

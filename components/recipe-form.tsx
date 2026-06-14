@@ -12,6 +12,18 @@ function fileSizeDisplay(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/** 客户端判断图片类型，兼容 Android file.type 为空的情况 */
+function isImageType(file: File): { ok: boolean; msg?: string } {
+  const mimeType = file.type;
+  if (mimeType && ["image/jpeg", "image/png", "image/webp"].includes(mimeType)) return { ok: true };
+  if (!mimeType && file.name) {
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (ext && ["jpg", "jpeg", "png", "webp"].includes(ext)) return { ok: true };
+  }
+  if (mimeType) return { ok: false, msg: `不支持 ${mimeType}，只支持 JPG、PNG、WebP` };
+  return { ok: false, msg: "无法识别图片格式，请选择 JPG、PNG 或 WebP 图片" };
+}
+
 export function RecipeForm({ categories, recipe }: { categories: Category[]; recipe?: RecipeDetail; userId?: string }) {
   const isEdit = !!recipe;
   const [ingredients, setIngredients] = useState<IngItem[]>(
@@ -24,17 +36,23 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
   const [imagePreview, setImagePreview] = useState<string | null>(recipe?.coverImageUrl || null);
   const [imageFile, setImageFile] = useState<{ name: string; size: string } | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Server Action 返回 { ok, id } 或 { error }，不 redirect
-  // 客户端根据结果导航
   type FormState = { ok?: boolean; id?: string; error?: string } | null;
   const [state, formAction, isPending] = useActionState(
     async (_prev: FormState, formData: FormData): Promise<FormState> => {
-      const result = isEdit
-        ? await updateRecipe(recipe!.id, formData)
-        : await createRecipe(formData);
-      // result 是 { ok: true, id?: string } | { error: string }
-      return result as FormState;
+      setSubmitError(null);
+      try {
+        const result = isEdit
+          ? await updateRecipe(recipe!.id, formData)
+          : await createRecipe(formData);
+        return result as FormState;
+      } catch (e: unknown) {
+        // redirect() 异常需要重新抛出，不能吞掉
+        if (e instanceof Error && e.message === "NEXT_REDIRECT") throw e;
+        if (e && typeof e === "object" && "digest" in e && String((e as { digest: unknown }).digest).startsWith("NEXT_")) throw e;
+        return { error: e instanceof Error ? e.message : "保存失败，请重试" };
+      }
     },
     null as FormState
   );
@@ -48,6 +66,7 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
         window.location.href = `/recipes/${state.id}`;
       }
     } else if (state?.error) {
+      setSubmitError(state.error);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [state, isEdit, recipe]);
@@ -64,15 +83,17 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
     setImageFile({ name: file.name, size: fileSizeDisplay(file.size) });
     setImageError(null);
 
-    // 客户端校验
+    // 客户端校验：大小
     if (file.size > 5 * 1024 * 1024) {
       setImageError(`图片 ${fileSizeDisplay(file.size)}，超过 5MB 限制，请压缩后重试`);
       e.target.value = "";
       setImagePreview(null);
       return;
     }
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setImageError(`不支持 ${file.type || "未知格式"}，只支持 JPG、PNG、WebP`);
+    // 客户端校验：格式（兼容 Android file.type 为空）
+    const typeCheck = isImageType(file);
+    if (!typeCheck.ok) {
+      setImageError(typeCheck.msg || "不支持该图片格式");
       e.target.value = "";
       setImagePreview(null);
       return;
@@ -90,9 +111,9 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
       <input type="hidden" name="steps" value={JSON.stringify(stepText.split("\n").map(s => s.trim()).filter(Boolean).map(c => ({ content: c })))} />
 
       {/* 错误提示 */}
-      {state?.error && (
+      {submitError && (
         <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-4 text-center font-bold text-red-700">
-          ⚠️ {state.error}
+          ⚠️ {submitError}
         </div>
       )}
 
@@ -103,12 +124,12 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
         <label className="label">封面图 {!isEdit && <span className="text-red-500">*</span>}
           <input className="field text-sm" name="coverImage" type="file" accept="image/jpeg,image/png,image/webp" required={!isEdit} onChange={handleImageChange} />
           {imageFile && !imageError && (
-            <span className="text-xs text-green-600">已选择：{imageFile.name}（{imageFile.size}）</span>
+            <span className="text-xs text-green-600">📎 {imageFile.name}（{imageFile.size}）</span>
           )}
           {imageError && (
-            <span className="text-xs text-red-600">{imageError}</span>
+            <span className="text-xs text-red-600">❌ {imageError}</span>
           )}
-          {!imageFile && (
+          {!imageFile && !imageError && (
             <span className="text-xs text-orange-400">支持 JPG/PNG/WebP，最大 5MB{isEdit ? "，不选则保留原图" : ""}</span>
           )}
         </label>
