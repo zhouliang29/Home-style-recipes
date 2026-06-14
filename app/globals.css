@@ -26,6 +26,7 @@ input, textarea, select, button { font: inherit; }
 .btn:disabled { opacity: .6; cursor: not-allowed; }
 .btn.secondary { background: #ffedd5; color: #9a3412; }
 .btn.danger { background: #dc2626; color: white; }
+.mobile-action { min-height: 48px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .field { width: 100%; border: 1px solid #fdba74; background: white; border-radius: .85rem; padding: .75rem .9rem; font-size: 1rem; /* 防止 iOS 缩放 */ }
 .label { display: grid; gap: .35rem; font-weight: 700; color: #7c2d12; }
 .muted { color: #9a6a45; }
@@ -34,7 +35,8 @@ input, textarea, select, button { font: inherit; }
 @media (max-width: 480px) {
   .grid-cards { grid-template-columns: 1fr; }
 }
-/* iOS 安全区域（底部导航栏） */
+/* 手机底部固定导航会覆盖页面底部按钮；固定给内容区留出可点击空间，iOS 再叠加安全区 */
+.mobile-nav-safe { padding-bottom: 7rem; }
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .mobile-nav-safe { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+  .mobile-nav-safe { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); }
 }

@@ -105,7 +105,7 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
       </section>
 
       {/* 提交按钮 */}
-      <button className="btn w-full py-4 text-lg" type="submit" disabled={isPending}>
+      <button className="btn mobile-action w-full py-4 text-lg" type="submit" disabled={isPending}>
         {isPending ? "保存中..." : isEdit ? "保存修改" : "创建菜谱"}
       </button>
     </form>

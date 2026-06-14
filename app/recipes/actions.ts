@@ -61,7 +61,10 @@ export async function toggleFavoriteAction(recipeId: string) {
 export async function archiveRecipeAction(recipeId: string) {
   await requireUser();
   archiveRecipe(recipeId);
+  revalidatePath(`/recipes/${recipeId}`);
   revalidatePath("/recipes");
+  revalidatePath("/");
+  redirect("/recipes");
 }
 
 export async function logCookedAction(formData: FormData) {
