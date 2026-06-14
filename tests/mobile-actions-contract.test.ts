@@ -17,6 +17,10 @@ function parseSizeLimit(value: unknown): number {
 }
 
 describe("mobile Server Action contract", () => {
+  it("allows the phone browser origin to request Next.js dev assets", () => {
+    expect(nextConfig.allowedDevOrigins).toContain("192.168.8.112");
+  });
+
   it("allows mobile photo uploads up to the client-side 5MB limit", () => {
     const limit = nextConfig.experimental?.serverActions?.bodySizeLimit;
 
