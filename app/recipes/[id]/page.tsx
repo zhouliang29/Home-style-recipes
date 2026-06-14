@@ -15,23 +15,92 @@ export default async function RecipeDetailPage(props: { params: Promise<{ id: st
   const { id } = await props.params;
   const recipe = getRecipe(id, user.id);
   if (!recipe) notFound();
-  return <div className="space-y-5"><PageTitle title={recipe.title} subtitle={recipe.categoryName || undefined} action={canEditRecipe(user, recipe) ? <Link className="btn secondary" href={`/recipes/${id}/edit`}>编辑</Link> : undefined} />
-    {recipe.coverImageUrl && <img src={recipe.coverImageUrl} alt="" className="aspect-video w-full rounded-3xl object-cover" />}
-    <div className="flex flex-wrap gap-2 text-sm font-bold text-orange-700"><span className="rounded-full bg-orange-100 px-3 py-1">{difficulty[recipe.difficulty]}</span>{recipe.prepTimeMinutes ? <span className="rounded-full bg-orange-100 px-3 py-1">准备 {recipe.prepTimeMinutes} 分钟</span> : null}{recipe.cookTimeMinutes ? <span className="rounded-full bg-orange-100 px-3 py-1">烹饪 {recipe.cookTimeMinutes} 分钟</span> : null}{recipe.servings ? <span className="rounded-full bg-orange-100 px-3 py-1">{recipe.servings} 份</span> : null}</div>
-    <div className="flex gap-3">
-      <FavoriteButton recipeId={recipe.id} initialFavorite={recipe.isFavorite} />
-      <CookedButton recipeId={recipe.id} />
-      <AddToMenuDialog recipeId={recipe.id} recipeTitle={recipe.title} />
+  return (
+    <div className="space-y-6">
+      <PageTitle
+        title={recipe.title}
+        subtitle={recipe.categoryName || undefined}
+        action={canEditRecipe(user, recipe) ? <Link className="btn secondary" href={`/recipes/${id}/edit`}>✏️ 编辑</Link> : undefined}
+      />
+
+      {/* 封面图 */}
+      {recipe.coverImageUrl && (
+        <div className="overflow-hidden rounded-3xl shadow-lg">
+          <img src={recipe.coverImageUrl} alt="" className="aspect-video w-full object-cover" />
+        </div>
+      )}
+
+      {/* 标签 */}
+      <div className="flex flex-wrap gap-2 text-sm font-bold text-orange-700">
+        <span className="rounded-full bg-orange-100 px-4 py-1.5">{difficulty[recipe.difficulty]}</span>
+        {recipe.prepTimeMinutes ? <span className="rounded-full bg-orange-100 px-4 py-1.5">⏱ 准备 {recipe.prepTimeMinutes} 分钟</span> : null}
+        {recipe.cookTimeMinutes ? <span className="rounded-full bg-orange-100 px-4 py-1.5">🔥 烹饪 {recipe.cookTimeMinutes} 分钟</span> : null}
+        {recipe.servings ? <span className="rounded-full bg-orange-100 px-4 py-1.5">🍽 {recipe.servings} 份</span> : null}
+      </div>
+
+      {/* 操作按钮 */}
+      <div className="flex flex-wrap gap-3">
+        <FavoriteButton recipeId={recipe.id} initialFavorite={recipe.isFavorite} />
+        <CookedButton recipeId={recipe.id} />
+        <AddToMenuDialog recipeId={recipe.id} recipeTitle={recipe.title} />
+      </div>
+
+      {/* 简介 */}
+      {recipe.description && <p className="muted text-lg leading-relaxed">{recipe.description}</p>}
+
+      {/* 食材 */}
+      <section className="card p-6">
+        <h2 className="mb-4 text-xl font-black text-orange-700">🥬 食材</h2>
+        {["main", "seasoning"].map((g) => {
+          const items = recipe.ingredients.filter((i) => i.group === g);
+          if (!items.length) return null;
+          return (
+            <div key={g} className="mb-4 last:mb-0">
+              <h3 className="mb-2 font-bold text-orange-600">{g === "main" ? "主料" : "调料"}</h3>
+              <div className="rounded-2xl bg-orange-50/50 overflow-hidden">
+                {items.map((i) => (
+                  <div className="flex items-center justify-between border-b border-orange-100/60 px-4 py-2.5 last:border-0" key={i.id}>
+                    <span className="font-medium">{i.name}</span>
+                    <span className="muted">{i.amount}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </section>
+
+      {/* 做法 */}
+      <section className="card p-6">
+        <h2 className="mb-4 text-xl font-black text-orange-700">👨‍🍳 做法</h2>
+        <div className="space-y-5">
+          {recipe.steps.map((s) => (
+            <div className="flex gap-4" key={s.id}>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-amber-500 text-sm font-black text-white shadow-sm">
+                {s.stepNumber}
+              </span>
+              <p className="pt-1 leading-relaxed">{s.content}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 小贴士 */}
+      {recipe.tips ? (
+        <section className="card border-amber-200 bg-amber-50/80 p-6">
+          <h2 className="mb-2 text-xl font-black text-amber-700">💡 小贴士</h2>
+          <p className="muted leading-relaxed">{recipe.tips}</p>
+        </section>
+      ) : null}
+
+      {/* 底部信息 */}
+      <div className="flex items-center justify-between text-sm muted">
+        <span>创建者：{recipe.createdByName || "未知"}</span>
+        <span>更新于 {new Date(recipe.updatedAt).toLocaleDateString("zh-CN")}</span>
+      </div>
+
+      {/* 删除按钮 */}
+      {canEditRecipe(user, recipe) && <DeleteRecipeButton recipeId={recipe.id} recipeTitle={recipe.title} />}
     </div>
-    {recipe.description && <p className="muted">{recipe.description}</p>}
-    <section className="card p-5"><h2 className="mb-3 font-black text-orange-700">食材</h2>
-      {["main", "seasoning"].map((g) => { const items = recipe.ingredients.filter((i) => i.group === g); if (!items.length) return null; return <div key={g} className="mb-3"><h3 className="mb-1 font-bold text-orange-600">{g==="main"?"主料":"调料"}</h3>{items.map((i) => <div className="flex items-center justify-between border-b border-orange-100 py-2 last:border-0" key={i.id}><span>{i.name}</span><span className="muted">{i.amount}</span></div>)}</div>; })}
-    </section>
-    <section className="card p-5"><h2 className="mb-3 font-black text-orange-700">做法</h2>
-      {recipe.steps.map((s) => <div className="mb-4 flex gap-3 last:mb-0" key={s.id}><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-black text-white">{s.stepNumber}</span><p className="pt-1">{s.content}</p></div>)}
-    </section>
-    {recipe.tips ? <section className="card p-5"><h2 className="mb-2 font-black text-orange-700">小贴士</h2><p className="muted">{recipe.tips}</p></section> : null}
-    <p className="muted text-sm">创建者：{recipe.createdByName || "未知"} · 更新于 {new Date(recipe.updatedAt).toLocaleDateString("zh-CN")}</p>
-    {canEditRecipe(user, recipe) && <DeleteRecipeButton recipeId={recipe.id} recipeTitle={recipe.title} />}
-  </div>;
+  );
 }

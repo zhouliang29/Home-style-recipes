@@ -7,7 +7,7 @@ const roleLabel: Record<string, string> = {
   member: "成员",
 };
 
-export function UserMenu({ name, role }: { name: string; role: string }) {
+export function UserMenu({ username, role }: { username: string; role: string }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -43,9 +43,9 @@ export function UserMenu({ name, role }: { name: string; role: string }) {
         aria-haspopup="true"
       >
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-500 text-xs font-black text-white">
-          {name.charAt(0)}
+          {username.charAt(0)}
         </span>
-        <span className="max-w-[8rem] truncate">{name}</span>
+        <span className="max-w-[8rem] truncate">{username}</span>
         <span className="text-xs text-orange-500">· {roleLabel[role] || role}</span>
         <svg className={`h-4 w-4 text-orange-400 transition-transform ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />

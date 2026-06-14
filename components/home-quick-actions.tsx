@@ -8,5 +8,19 @@ const actions = [
 ];
 
 export function HomeQuickActions() {
-  return <div className="grid gap-3 sm:grid-cols-2">{actions.map(([href, title, desc, icon]) => <Link className="card p-5 transition hover:-translate-y-0.5 hover:shadow-lg" href={href} key={href}><div className="text-3xl">{icon}</div><div className="mt-2 text-xl font-black text-orange-700">{title}</div><p className="muted">{desc}</p></Link>)}</div>;
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {actions.map(([href, title, desc, icon]) => (
+        <Link
+          className="card group p-6 transition hover:-translate-y-1 hover:shadow-lg"
+          href={href}
+          key={href}
+        >
+          <div className="text-4xl transition-transform group-hover:scale-110">{icon}</div>
+          <div className="mt-3 text-xl font-black text-orange-700">{title}</div>
+          <p className="muted mt-1">{desc}</p>
+        </Link>
+      ))}
+    </div>
+  );
 }
