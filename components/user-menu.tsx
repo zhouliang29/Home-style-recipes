@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 
 const roleLabel: Record<string, string> = {
@@ -9,15 +10,34 @@ const roleLabel: Record<string, string> = {
 
 export function UserMenu({ username, role }: { username?: string; role?: string }) {
   const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
+
+  // 计算下拉菜单位置（相对于按钮）
+  function updatePos() {
+    if (!btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    setPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+  }
+
+  useEffect(() => {
+    if (open) {
+      updatePos();
+      window.addEventListener("resize", updatePos);
+      window.addEventListener("scroll", updatePos, true);
+      return () => {
+        window.removeEventListener("resize", updatePos);
+        window.removeEventListener("scroll", updatePos, true);
+      };
+    }
+  }, [open]);
 
   // 点击外部关闭
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (btnRef.current && btnRef.current.contains(e.target as Node)) return;
+      setOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -34,8 +54,9 @@ export function UserMenu({ username, role }: { username?: string; role?: string 
   }, [open]);
 
   return (
-    <div className="relative" ref={menuRef}>
+    <>
       <button
+        ref={btnRef}
         type="button"
         className="flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1.5 font-bold text-orange-800 ring-1 ring-orange-200 transition hover:bg-orange-100"
         onClick={() => setOpen((v) => !v)}
@@ -52,8 +73,11 @@ export function UserMenu({ username, role }: { username?: string; role?: string 
         </svg>
       </button>
 
-      {open && (
-        <div className="absolute right-0 z-[9999] mt-2 w-48 overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-orange-100">
+      {open && createPortal(
+        <div
+          className="fixed z-[9999] w-48 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-orange-100"
+          style={{ top: pos.top, right: pos.right }}
+        >
           {role === "admin" && (
             <Link
               href="/settings/users"
@@ -77,8 +101,9 @@ export function UserMenu({ username, role }: { username?: string; role?: string 
           >
             🚪 退出登录
           </Link>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
