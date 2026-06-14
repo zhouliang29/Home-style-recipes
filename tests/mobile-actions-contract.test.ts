@@ -23,9 +23,9 @@ describe("mobile Server Action contract", () => {
     expect(parseSizeLimit(limit)).toBeGreaterThanOrEqual(5 * 1024 * 1024);
   });
 
-  it("redirects to the recipes list after archiving from the detail page", () => {
+  it("returns ok:true after archiving from the detail page", () => {
     const source = readFileSync(join(process.cwd(), "app/recipes/actions.ts"), "utf8");
 
-    expect(source).toMatch(/export async function archiveRecipeAction[\s\S]*redirect\("\/recipes"\)/);
+    expect(source).toMatch(/export async function archiveRecipeAction[\s\S]*return \{ ok: true \}/);
   });
 });

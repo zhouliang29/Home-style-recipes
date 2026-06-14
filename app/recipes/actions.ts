@@ -1,5 +1,4 @@
 "use server";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { saveRecipe, archiveRecipe, toggleFavorite, logCooked } from "@/lib/recipes";
@@ -18,36 +17,37 @@ function formatError(e: unknown): { error: string } {
   return { error: "保存失败，请重试" };
 }
 
-export async function createRecipe(formData: FormData) {
-  let id: string;
+export async function createRecipe(formData: FormData): Promise<{ ok: true; id: string } | { error: string }> {
   try {
     const user = await requireUser();
     const raw = { title: formData.get("title") || "", description: formData.get("description") || "", categoryId: formData.get("categoryId") || null, difficulty: formData.get("difficulty") || "easy", prepTimeMinutes: formData.get("prepTimeMinutes"), cookTimeMinutes: formData.get("cookTimeMinutes"), servings: formData.get("servings"), tips: formData.get("tips") || "", ingredients: JSON.parse(String(formData.get("ingredients") || "[]")), steps: JSON.parse(String(formData.get("steps") || "[]")) };
     const input = recipeInputSchema.parse(raw);
     const coverImageUrl = await saveRecipeImage(formData.get("coverImage") as File | null);
-    id = saveRecipe({ ...input, userId: user.id, coverImageUrl });
+    const id = saveRecipe({ ...input, userId: user.id, coverImageUrl });
+    revalidatePath("/recipes");
+    revalidatePath("/");
+    return { ok: true, id };
   } catch (e) {
     return formatError(e);
   }
-  revalidatePath("/recipes");
-  revalidatePath("/");
-  redirect(`/recipes/${id}`);
 }
 
-export async function updateRecipe(recipeId: string, formData: FormData) {
+export async function updateRecipe(recipeId: string, formData: FormData): Promise<{ ok: true } | { error: string }> {
   try {
     const user = await requireUser();
     const raw = { title: formData.get("title") || "", description: formData.get("description") || "", categoryId: formData.get("categoryId") || null, difficulty: formData.get("difficulty") || "easy", prepTimeMinutes: formData.get("prepTimeMinutes"), cookTimeMinutes: formData.get("cookTimeMinutes"), servings: formData.get("servings"), tips: formData.get("tips") || "", ingredients: JSON.parse(String(formData.get("ingredients") || "[]")), steps: JSON.parse(String(formData.get("steps") || "[]")) };
     const input = recipeInputSchema.parse(raw);
     const coverImageUrl = await saveRecipeImage(formData.get("coverImage") as File | null);
     saveRecipe({ ...input, id: recipeId, userId: user.id, coverImageUrl });
+    return { ok: true };
   } catch (e) {
     return formatError(e);
   }
-  revalidatePath(`/recipes/${recipeId}`);
-  revalidatePath("/recipes");
-  revalidatePath("/");
-  redirect(`/recipes/${recipeId}`);
+  finally {
+    revalidatePath(`/recipes/${recipeId}`);
+    revalidatePath("/recipes");
+    revalidatePath("/");
+  }
 }
 
 export async function toggleFavoriteAction(recipeId: string) {
@@ -58,13 +58,18 @@ export async function toggleFavoriteAction(recipeId: string) {
   revalidatePath("/favorites");
 }
 
-export async function archiveRecipeAction(recipeId: string) {
-  await requireUser();
-  archiveRecipe(recipeId);
-  revalidatePath(`/recipes/${recipeId}`);
-  revalidatePath("/recipes");
-  revalidatePath("/");
-  redirect("/recipes");
+export async function archiveRecipeAction(recipeId: string): Promise<{ ok: true } | { error: string }> {
+  try {
+    await requireUser();
+    archiveRecipe(recipeId);
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "删除失败" };
+  } finally {
+    revalidatePath(`/recipes/${recipeId}`);
+    revalidatePath("/recipes");
+    revalidatePath("/");
+  }
 }
 
 export async function logCookedAction(formData: FormData) {
