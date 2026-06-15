@@ -18,7 +18,7 @@ export default async function RecipeDetailPage(props: { params: Promise<{ id: st
       <PageTitle
         title={recipe.title}
         subtitle={recipe.categoryName || undefined}
-        action={canEditRecipe(user, recipe) ? <Link className="btn secondary" href={`/recipes/${id}/edit`}>✏️ 编辑</Link> : undefined}
+        action={<div className="flex gap-2">{canEditRecipe(user, recipe) ? <Link className="btn secondary" href={`/recipes/${id}/edit`}>✏️ 编辑</Link> : null}<Link className="btn secondary" href="/recipes">← 返回</Link></div>}
       />
 
       {/* 封面图 */}

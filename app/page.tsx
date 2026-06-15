@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { getCategories } from "@/lib/recipes";
 import { HomeQuickActions } from "@/components/home-quick-actions";
 import { RecentRecipes } from "@/components/recent-recipes";
+import { CHEF_OPTIONS } from "@/lib/constants";
 
 export default async function Home() {
   await requireUser();
@@ -30,7 +31,7 @@ export default async function Home() {
         <HomeQuickActions />
       </div>
 
-      {/* 分类入口 */}
+      {/* 分类入口 + 厨师入口 */}
       <section className="animate-fade-up animate-fade-up-delay-2">
         <h2 className="mb-4 text-2xl font-black text-orange-700">📂 分类入口</h2>
         <div className="flex flex-wrap gap-2">
@@ -40,7 +41,16 @@ export default async function Home() {
               href={`/recipes?categoryId=${c.id}`}
               key={c.id}
             >
-              {c.name}
+              {c.icon && <span className="mr-1">{c.icon}</span>}{c.name}
+            </Link>
+          ))}
+          {CHEF_OPTIONS.map((c) => (
+            <Link
+              className="rounded-full bg-amber-50 px-5 py-2.5 font-bold text-amber-800 ring-1 ring-amber-200 transition hover:bg-amber-100 hover:shadow-sm"
+              href={`/recipes?chef=${encodeURIComponent(c)}`}
+              key={c}
+            >
+              👨‍🍳 {c}
             </Link>
           ))}
         </div>

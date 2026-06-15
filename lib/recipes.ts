@@ -27,7 +27,7 @@ export function getCategories(): Category[] {
     .all() as Category[];
 }
 
-export function listRecipes(options: { userId?: string; q?: string; categoryId?: string; favoritesOnly?: boolean } = {}) {
+export function listRecipes(options: { userId?: string; q?: string; categoryId?: string; chef?: string; favoritesOnly?: boolean } = {}) {
   const args: unknown[] = [];
   let where = "r.is_archived = 0";
   if (options.q) {
@@ -38,6 +38,10 @@ export function listRecipes(options: { userId?: string; q?: string; categoryId?:
   if (options.categoryId) {
     where += " AND r.category_id = ?";
     args.push(options.categoryId);
+  }
+  if (options.chef) {
+    where += " AND r.chef = ?";
+    args.push(options.chef);
   }
   if (options.favoritesOnly && options.userId) {
     where += " AND EXISTS (SELECT 1 FROM favorites f2 WHERE f2.recipe_id = r.id AND f2.user_id = ?)";
