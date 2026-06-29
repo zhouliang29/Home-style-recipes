@@ -24,6 +24,22 @@ export type RecipeSummary = {
   updatedAt: number;
 };
 
+export type MealOrder = {
+  id: string;
+  totalCount: number;
+  createdById: string;
+  createdAt: number;
+};
+
+export type MealOrderItem = {
+  id: string;
+  mealOrderId: string;
+  recipeId: string;
+  recipeTitle: string;
+  coverImageUrl?: string | null;
+  sortOrder: number;
+};
+
 export type RecipeDetail = RecipeSummary & {
   tips?: string | null;
   createdById: string;

@@ -112,4 +112,20 @@ export const shoppingListItems = sqliteTable("shopping_list_items", {
   sortOrder: integer("sort_order").notNull().default(0),
 });
 
+export const mealOrders = sqliteTable("meal_orders", {
+  id: text("id").primaryKey(),
+  totalCount: integer("total_count").notNull().default(0),
+  createdById: text("created_by_id").notNull().references(() => users.id),
+  createdAt: integer("created_at").notNull().default(sql`(unixepoch() * 1000)`),
+});
+
+export const mealOrderItems = sqliteTable("meal_order_items", {
+  id: text("id").primaryKey(),
+  mealOrderId: text("meal_order_id").notNull().references(() => mealOrders.id, { onDelete: "cascade" }),
+  recipeId: text("recipe_id").notNull().references(() => recipes.id, { onDelete: "cascade" }),
+  recipeTitle: text("recipe_title").notNull(),
+  coverImageUrl: text("cover_image_url"),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({ recipes: many(recipes) }));

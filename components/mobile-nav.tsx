@@ -4,13 +4,14 @@ const items = [
   ["/", "首页", "🏠"],
   ["/recipes", "菜谱", "📖"],
   ["/random", "随机", "🎲"],
+  ["/meal-order", "点菜", "📋"],
   ["/menu", "菜单", "📅"],
   ["/shopping", "购物", "🛒"],
 ];
 
 export function MobileNav() {
   return (
-    <nav className="fixed bottom-3 left-1/2 z-50 grid w-[min(94vw,34rem)] -translate-x-1/2 grid-cols-5 rounded-3xl bg-white/95 p-2 shadow-2xl ring-1 ring-orange-100 backdrop-blur-xl">
+    <nav className="fixed bottom-3 left-1/2 z-50 grid w-[min(94vw,40rem)] -translate-x-1/2 grid-cols-6 rounded-3xl bg-white/95 p-2 shadow-2xl ring-1 ring-orange-100 backdrop-blur-xl">
       {items.map(([href, label, icon]) => (
         <Link
           key={href}

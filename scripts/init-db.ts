@@ -116,6 +116,20 @@ CREATE INDEX IF NOT EXISTS idx_recipes_active_updated ON recipes(is_archived, up
 CREATE INDEX IF NOT EXISTS idx_ingredients_recipe ON ingredients(recipe_id);
 CREATE INDEX IF NOT EXISTS idx_steps_recipe ON recipe_steps(recipe_id);
 CREATE INDEX IF NOT EXISTS idx_menu_items_menu ON weekly_menu_items(weekly_menu_id);
+CREATE TABLE IF NOT EXISTS meal_orders (
+  id TEXT PRIMARY KEY,
+  total_count INTEGER NOT NULL DEFAULT 0,
+  created_by_id TEXT NOT NULL REFERENCES users(id),
+  created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
+);
+CREATE TABLE IF NOT EXISTS meal_order_items (
+  id TEXT PRIMARY KEY,
+  meal_order_id TEXT NOT NULL REFERENCES meal_orders(id) ON DELETE CASCADE,
+  recipe_id TEXT NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
+  recipe_title TEXT NOT NULL,
+  cover_image_url TEXT,
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
 CREATE INDEX IF NOT EXISTS idx_shopping_items_list ON shopping_list_items(shopping_list_id);
 `);
 
