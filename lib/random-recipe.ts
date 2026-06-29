@@ -26,17 +26,16 @@ function toTime(value: Date | number | string | null | undefined) {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
-export function pickRandomRecipe<T extends RandomRecipeCandidate>(
+function filterRecipes<T extends RandomRecipeCandidate>(
   recipes: T[],
   filters: RandomRecipeFilters = {},
-  random: () => number = Math.random,
-): T | null {
+): T[] {
   const now = filters.now ?? new Date();
   const cutoff = filters.excludeRecentDays
     ? now.getTime() - filters.excludeRecentDays * 24 * 60 * 60 * 1000
     : null;
 
-  const candidates = recipes.filter((recipe) => {
+  return recipes.filter((recipe) => {
     if (recipe.isArchived) return false;
     if (filters.categoryId && recipe.categoryId !== filters.categoryId) return false;
     if (filters.difficulty && recipe.difficulty !== filters.difficulty) return false;
@@ -54,8 +53,32 @@ export function pickRandomRecipe<T extends RandomRecipeCandidate>(
     }
     return true;
   });
+}
 
+export function pickRandomRecipe<T extends RandomRecipeCandidate>(
+  recipes: T[],
+  filters: RandomRecipeFilters = {},
+  random: () => number = Math.random,
+): T | null {
+  const candidates = filterRecipes(recipes, filters);
   if (candidates.length === 0) return null;
   const index = Math.min(candidates.length - 1, Math.floor(random() * candidates.length));
   return candidates[index];
+}
+
+export function pickRandomRecipes<T extends RandomRecipeCandidate>(
+  recipes: T[],
+  count: number,
+  filters: RandomRecipeFilters = {},
+  random: () => number = Math.random,
+): T[] {
+  const candidates = filterRecipes(recipes, filters);
+  if (candidates.length === 0) return [];
+  // Fisher-Yates 洗牌后取前 count 个
+  const shuffled = [...candidates];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, Math.min(count, shuffled.length));
 }
