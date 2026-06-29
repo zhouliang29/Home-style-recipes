@@ -10,6 +10,9 @@ sqlite.pragma("foreign_keys = ON");
 
 // 自动迁移：确保 chef 列存在
 try { sqlite.exec("ALTER TABLE recipes ADD COLUMN chef TEXT"); } catch { /* column already exists */ }
+// 自动迁移：确保 meal_order_items 新列存在
+try { sqlite.exec("ALTER TABLE meal_order_items ADD COLUMN chef TEXT"); } catch { /* column already exists */ }
+try { sqlite.exec("ALTER TABLE meal_order_items ADD COLUMN category_name TEXT"); } catch { /* column already exists */ }
 
 export const drizzleDb = drizzle(sqlite, { schema });
 export const db = sqlite;
