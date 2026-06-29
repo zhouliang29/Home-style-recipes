@@ -125,6 +125,8 @@ export const mealOrderItems = sqliteTable("meal_order_items", {
   recipeId: text("recipe_id").notNull().references(() => recipes.id, { onDelete: "cascade" }),
   recipeTitle: text("recipe_title").notNull(),
   coverImageUrl: text("cover_image_url"),
+  chef: text("chef"),
+  categoryName: text("category_name"),
   sortOrder: integer("sort_order").notNull().default(0),
 });
 

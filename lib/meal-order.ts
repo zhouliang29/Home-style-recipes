@@ -6,18 +6,20 @@ export function createMealOrder(input: { createdById: string; recipeIds: string[
   const id = randomUUID();
   // 先查菜谱信息
   const recipes = db
-    .prepare('SELECT id, title, cover_image_url as coverImageUrl FROM recipes WHERE id IN (' + input.recipeIds.map(() => '?').join(',') + ')')
-    .all(...input.recipeIds) as { id: string; title: string; coverImageUrl: string | null }[];
+    .prepare(`SELECT r.id, r.title, r.cover_image_url as coverImageUrl, r.chef, c.name as categoryName
+      FROM recipes r LEFT JOIN categories c ON c.id = r.category_id
+      WHERE r.id IN (` + input.recipeIds.map(() => '?').join(',') + `)`)
+    .all(...input.recipeIds) as { id: string; title: string; coverImageUrl: string | null; chef: string | null; categoryName: string | null }[];
 
   const tx = db.transaction(() => {
     db.prepare("INSERT INTO meal_orders (id, total_count, created_by_id) VALUES (?, ?, ?)")
       .run(id, recipes.length, input.createdById);
 
     const insertItem = db.prepare(
-      "INSERT INTO meal_order_items (id, meal_order_id, recipe_id, recipe_title, cover_image_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)"
+      "INSERT INTO meal_order_items (id, meal_order_id, recipe_id, recipe_title, cover_image_url, chef, category_name, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     );
     recipes.forEach((r, index) => {
-      insertItem.run(randomUUID(), id, r.id, r.title, r.coverImageUrl, index);
+      insertItem.run(randomUUID(), id, r.id, r.title, r.coverImageUrl, r.chef, r.categoryName, index);
     });
   });
   tx();
@@ -31,7 +33,7 @@ export function getMealOrder(id: string): (MealOrder & { items: MealOrderItem[] 
   if (!order) return null;
 
   const items = db
-    .prepare("SELECT id, meal_order_id as mealOrderId, recipe_id as recipeId, recipe_title as recipeTitle, cover_image_url as coverImageUrl, sort_order as sortOrder FROM meal_order_items WHERE meal_order_id = ? ORDER BY sort_order")
+    .prepare("SELECT id, meal_order_id as mealOrderId, recipe_id as recipeId, recipe_title as recipeTitle, cover_image_url as coverImageUrl, chef, category_name as categoryName, sort_order as sortOrder FROM meal_order_items WHERE meal_order_id = ? ORDER BY sort_order")
     .all(id) as MealOrderItem[];
 
   return { ...order, items };
@@ -44,7 +46,7 @@ export function listMealOrders(userId: string): (MealOrder & { items: MealOrderI
 
   return orders.map((order) => {
     const items = db
-      .prepare("SELECT id, meal_order_id as mealOrderId, recipe_id as recipeId, recipe_title as recipeTitle, cover_image_url as coverImageUrl, sort_order as sortOrder FROM meal_order_items WHERE meal_order_id = ? ORDER BY sort_order")
+      .prepare("SELECT id, meal_order_id as mealOrderId, recipe_id as recipeId, recipe_title as recipeTitle, cover_image_url as coverImageUrl, chef, category_name as categoryName, sort_order as sortOrder FROM meal_order_items WHERE meal_order_id = ? ORDER BY sort_order")
       .all(order.id) as MealOrderItem[];
     return { ...order, items };
   });

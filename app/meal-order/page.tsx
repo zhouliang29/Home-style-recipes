@@ -71,7 +71,7 @@ export default async function MealOrderListPage() {
                     </h3>
                     <p className="mt-0.5 text-sm muted">{order.totalCount} 道菜</p>
                     <p className="mt-1 flex flex-wrap gap-1 text-xs muted">
-                      {order.items.map((i) => i.recipeTitle).join("、")}
+                      {order.items.map((i) => [i.recipeTitle, i.chef && i.categoryName ? `(${i.chef} · ${i.categoryName})` : i.chef || i.categoryName || ""].filter(Boolean).join(" ")).join("、")}
                     </p>
                   </div>
                   <div className="text-2xl text-orange-300">→</div>

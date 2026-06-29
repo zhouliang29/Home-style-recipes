@@ -128,9 +128,14 @@ CREATE TABLE IF NOT EXISTS meal_order_items (
   recipe_id TEXT NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
   recipe_title TEXT NOT NULL,
   cover_image_url TEXT,
+  chef TEXT,
+  category_name TEXT,
   sort_order INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_shopping_items_list ON shopping_list_items(shopping_list_id);
+-- 兼容旧表：新增 chef 和 category_name 列（已有则忽略）
+ALTER TABLE meal_order_items ADD COLUMN chef TEXT;
+ALTER TABLE meal_order_items ADD COLUMN category_name TEXT;
 `);
 
 console.log(`Database initialized at ${dbPath}`);

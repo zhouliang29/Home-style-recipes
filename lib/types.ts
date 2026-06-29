@@ -37,6 +37,8 @@ export type MealOrderItem = {
   recipeId: string;
   recipeTitle: string;
   coverImageUrl?: string | null;
+  chef?: string | null;
+  categoryName?: string | null;
   sortOrder: number;
 };
 

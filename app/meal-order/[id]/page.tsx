@@ -64,6 +64,9 @@ export default async function MealOrderDetailPage(props: { params: Promise<{ id:
                 <Link href={`/recipes/${item.recipeId}`} className="font-bold text-orange-800 hover:text-orange-600 hover:underline">
                   {item.recipeTitle}
                 </Link>
+                <div className="mt-0.5 text-xs text-orange-500">
+                  {[item.chef, item.categoryName].filter(Boolean).join(" · ") || "—"}
+                </div>
               </div>
             </div>
           ))}
