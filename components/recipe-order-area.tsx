@@ -8,7 +8,7 @@ import { RecipeCard } from "@/components/recipe-card";
 
 const STORAGE_KEY = "meal-order-selected";
 
-export function RecipeOrderArea({ recipes }: { recipes: RecipeSummary[] }) {
+export function RecipeOrderArea({ recipes, allRecipes }: { recipes: RecipeSummary[]; allRecipes: RecipeSummary[] }) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
@@ -35,7 +35,8 @@ export function RecipeOrderArea({ recipes }: { recipes: RecipeSummary[] }) {
     });
   }
 
-  const selectedRecipes = recipes.filter((r) => selectedIds.has(r.id));
+  // 用全量查选中的菜（不受筛选影响）
+  const selectedRecipes = allRecipes.filter((r) => selectedIds.has(r.id));
 
   async function handleGenerate() {
     if (selectedRecipes.length === 0) return;
@@ -99,7 +100,12 @@ export function RecipeOrderArea({ recipes }: { recipes: RecipeSummary[] }) {
                       <span>🍳</span>
                     )}
                   </div>
-                  <span className="flex-1 truncate text-sm font-bold text-orange-800">{r.title}</span>
+                  <div className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-bold text-orange-800">{r.title}</span>
+                    <span className="truncate text-xs text-orange-500">
+                      {[r.chef, r.categoryName].filter(Boolean).join(" · ") || "—"}
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => toggle(r.id)}
