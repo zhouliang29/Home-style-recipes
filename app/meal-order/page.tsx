@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { listMealOrders } from "@/lib/meal-order";
 import { PageTitle, EmptyState } from "@/components/ui-blocks";
-import { deleteMealOrderAction } from "./actions";
+import { DeleteMealOrderButton } from "@/components/delete-meal-order-button";
 
 export default async function MealOrderListPage() {
   const user = await requireUser();
@@ -76,10 +76,7 @@ export default async function MealOrderListPage() {
                   </div>
                   <div className="text-2xl text-orange-300">→</div>
                 </Link>
-                <form action={deleteMealOrderAction} className="border-t border-orange-100 px-4 py-2 text-right">
-                  <input type="hidden" name="id" value={order.id} />
-                  <button className="text-xs font-bold text-red-500 hover:text-red-700">删除</button>
-                </form>
+                <DeleteMealOrderButton orderId={order.id} />
               </div>
             );
           })}

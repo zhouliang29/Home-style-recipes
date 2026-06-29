@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
-import { saveRecipe, archiveRecipe, toggleFavorite, logCooked } from "@/lib/recipes";
+import { saveRecipe, archiveRecipe, toggleFavorite, logCooked, createCategory } from "@/lib/recipes";
 import { saveRecipeImage } from "@/lib/image-upload";
 import { recipeInputSchema } from "@/lib/validators/recipe";
 import { ZodError } from "zod";
@@ -81,4 +81,20 @@ export async function logCookedAction(formData: FormData) {
   const user = await requireUser();
   logCooked(user.id, String(formData.get("recipeId")), String(formData.get("note") || ""));
   revalidatePath(`/recipes/${formData.get("recipeId")}`);
+}
+
+export async function createCategoryAction(name: string): Promise<{ id: string; name: string } | { error: string }> {
+  try {
+    await requireUser();
+    const trimmed = name.trim();
+    if (!trimmed) return { error: "分类名称不能为空" };
+    if (trimmed.length > 20) return { error: "分类名称不能超过20个字" };
+    const category = createCategory(trimmed);
+    revalidatePath("/recipes");
+    revalidatePath("/recipes/new");
+    return { id: category.id, name: category.name };
+  } catch (e) {
+    if (isNextInternalError(e)) throw e;
+    return { error: e instanceof Error ? e.message : "创建分类失败" };
+  }
 }

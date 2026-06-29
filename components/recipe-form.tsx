@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { PageTitle } from "@/components/ui-blocks";
 import { CHEF_OPTIONS } from "@/lib/constants";
 import type { Category, RecipeDetail } from "@/lib/types";
+import { createCategoryAction } from "@/app/recipes/actions";
 
 type IngItem = { name: string; amount: string; group: "main" | "seasoning" };
 
@@ -40,6 +41,11 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
   const [imagePreview, setImagePreview] = useState<string | null>(recipe?.coverImageUrl || null);
   const [imageFile, setImageFile] = useState<{ name: string; size: string } | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [categoryList, setCategoryList] = useState(categories);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const categoryInputRef = useRef<HTMLInputElement>(null);
 
   function addIng(group: "main" | "seasoning") { setIngredients([...ingredients, { name: "", amount: "", group }]); }
   function updateIng(i: number, field: keyof IngItem, value: string) { const copy = [...ingredients]; copy[i] = { ...copy[i], [field]: value }; setIngredients(copy); }
@@ -162,7 +168,27 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
             <img src={imagePreview} alt="封面预览" className="aspect-video w-full object-cover" />
           </div>
         )}
-        <div className="grid gap-4 sm:grid-cols-3"><label className="label">分类<select className="field" name="categoryId" defaultValue={recipe?.categoryId || ""}><option value="">不选</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+        <div className="grid gap-4 sm:grid-cols-3"><label className="label">分类
+          <div className="flex gap-2">
+            <select className="field flex-1" name="categoryId" defaultValue={recipe?.categoryId || ""}><option value="">不选</option>{categoryList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+            <button type="button" className="btn secondary shrink-0 px-3 text-sm" onClick={() => { setShowAddCategory(true); setTimeout(() => categoryInputRef.current?.focus(), 50); }} title="添加分类">+</button>
+          </div>
+          {showAddCategory && <div className="mt-1 flex gap-2">
+            <input ref={categoryInputRef} className="field flex-1 text-sm" value={newCategoryName} onChange={(e) => { setNewCategoryName(e.target.value); setCategoryError(null); }} placeholder="新分类名称" maxLength={20} />
+            <button type="button" className="btn shrink-0 px-3 text-sm" onClick={async () => {
+              const name = newCategoryName.trim();
+              if (!name) { setCategoryError("名称不能为空"); return; }
+              const result = await createCategoryAction(name);
+              if ("error" in result) { setCategoryError(result.error); return; }
+              setCategoryList([...categoryList, { id: result.id, name: result.name }]);
+              setNewCategoryName("");
+              setShowAddCategory(false);
+              setCategoryError(null);
+            }}>确定</button>
+            <button type="button" className="btn secondary shrink-0 px-3 text-sm" onClick={() => { setShowAddCategory(false); setNewCategoryName(""); setCategoryError(null); }}>取消</button>
+          </div>}
+          {categoryError && <span className="text-xs text-red-500">{categoryError}</span>}
+        </label>
         <label className="label">难度<select className="field" name="difficulty" defaultValue={recipe?.difficulty || "easy"}><option value="easy">简单</option><option value="medium">中等</option><option value="hard">费工夫</option></select></label>
         <label className="label">厨师 <span className="text-red-500">*</span><select className="field" name="chef" defaultValue={recipe?.chef || ""}><option value="">请选择</option>{CHEF_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}</select></label></div>
         <div className="grid gap-4 sm:grid-cols-3"><label className="label">准备时间（分钟）<input className="field" name="prepTimeMinutes" type="number" min={1} defaultValue={recipe?.prepTimeMinutes || ""} inputMode="numeric" /></label>

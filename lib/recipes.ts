@@ -27,6 +27,14 @@ export function getCategories(): Category[] {
     .all() as Category[];
 }
 
+export function createCategory(name: string): Category {
+  const id = randomUUID();
+  // 取最大排序值 + 1
+  const maxOrder = db.prepare("SELECT MAX(sort_order) as m FROM categories").get() as { m: number | null };
+  db.prepare("INSERT INTO categories (id, name, sort_order) VALUES (?, ?, ?)").run(id, name, (maxOrder.m ?? -1) + 1);
+  return { id, name, sortOrder: (maxOrder.m ?? -1) + 1 };
+}
+
 export function listRecipes(options: { userId?: string; q?: string; categoryId?: string; chef?: string; favoritesOnly?: boolean } = {}) {
   const args: unknown[] = [];
   let where = "r.is_archived = 0";
