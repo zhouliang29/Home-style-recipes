@@ -3,8 +3,8 @@ import Link from "next/link";
 const items = [
   ["/", "首页", "🏠"],
   ["/recipes", "菜谱", "📖"],
-  ["/random", "随机", "🎲"],
   ["/meal-order", "点菜", "📋"],
+  ["/random", "随机", "🎲"],
   ["/menu", "菜单", "📅"],
   ["/shopping", "购物", "🛒"],
 ];

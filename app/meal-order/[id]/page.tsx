@@ -24,6 +24,9 @@ export default async function MealOrderDetailPage(props: { params: Promise<{ id:
 
   return (
     <div className="space-y-5">
+      <Link href="/meal-order" className="mb-2 inline-flex items-center gap-1 text-sm font-bold text-orange-600 hover:text-orange-500">
+        ← 返回点菜记录
+      </Link>
       <PageTitle
         title="本餐菜单"
         subtitle={`${dateStr} ${timeStr} · 共 ${order.totalCount} 道菜`}
