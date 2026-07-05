@@ -23,7 +23,7 @@ export default async function MealOrderDetailPage(props: { params: Promise<{ id:
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageTitle
         title="本餐菜单"
         subtitle={`${dateStr} ${timeStr} · 共 ${order.totalCount} 道菜`}
@@ -39,41 +39,38 @@ export default async function MealOrderDetailPage(props: { params: Promise<{ id:
         }
       />
 
-      {/* 菜单抬头 — 类似餐馆菜单风格 */}
-      <div className="card overflow-hidden text-center">
-        <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-8 text-white">
-          <div className="text-5xl">📋</div>
-          <h2 className="mt-3 text-2xl font-black">本餐菜单</h2>
-          <p className="mt-1 text-sm text-white/80">{dateStr}</p>
-        </div>
-
-        <div className="divide-y divide-orange-100 px-4 py-2">
+      {/* 简洁的菜单卡片 */}
+      <div className="card overflow-hidden">
+        <div className="divide-y divide-gray-100">
           {order.items.map((item, index) => (
-            <div key={item.id} className="flex items-center gap-4 py-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-black text-orange-700">
+            <Link
+              key={item.id}
+              href={`/recipes/${item.recipeId}`}
+              className="flex items-center gap-4 px-5 py-4 transition hover:bg-gray-50"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600">
                 {index + 1}
               </span>
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-orange-100 to-amber-50 text-2xl shadow-sm">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100 text-xl">
                 {item.coverImageUrl ? (
                   <img src={item.coverImageUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <span>🍳</span>
                 )}
               </div>
-              <div className="flex-1 text-left">
-                <Link href={`/recipes/${item.recipeId}`} className="font-bold text-orange-800 hover:text-orange-600 hover:underline">
-                  {item.recipeTitle}
-                </Link>
-                <div className="mt-0.5 text-xs text-orange-500">
+              <div className="flex-1">
+                <div className="font-medium text-gray-900">{item.recipeTitle}</div>
+                <div className="mt-0.5 text-sm text-gray-500">
                   {[item.chef, item.categoryName].filter(Boolean).join(" · ") || "—"}
                 </div>
               </div>
-            </div>
+              <span className="text-gray-300">→</span>
+            </Link>
           ))}
         </div>
 
-        <div className="border-t border-orange-100 bg-orange-50/80 px-6 py-3 text-sm text-orange-600">
-          共 {order.totalCount} 道菜 · 点餐时间 {timeStr}
+        <div className="border-t border-gray-100 bg-gray-50 px-5 py-4 text-center text-sm text-gray-600">
+          共 {order.totalCount} 道菜
         </div>
       </div>
     </div>
