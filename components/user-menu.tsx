@@ -100,6 +100,13 @@ export function UserMenu({ username, role }: { username?: string; role?: string 
           >
             🔑 修改密码
           </Link>
+          <Link
+            href="/settings/data"
+            className="flex items-center gap-2 px-4 py-3 text-sm font-bold text-orange-800 transition hover:bg-orange-50"
+            onClick={() => setOpen(false)}
+          >
+            💾 数据管理
+          </Link>
 
           {/* 退出登录 */}
           {!confirmLogout ? (
