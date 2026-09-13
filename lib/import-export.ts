@@ -79,8 +79,8 @@ function saveImportedImage(image: unknown): string {
 export function exportRecipes(userId: string): ExportedRecipe {
   // 获取所有菜谱详情
   const recipeIds = db
-    .prepare("SELECT id FROM recipes WHERE is_archived = 0 AND created_by_id = ?")
-    .all(userId)
+    .prepare("SELECT id FROM recipes WHERE is_archived = 0")
+    .all()
     .map((row: any) => row.id) as string[];
 
   const recipes: ExportedRecipeItem[] = [];
@@ -149,16 +149,6 @@ export function importRecipes(userId: string, data: ExportedRecipe): { imported:
   const tx = db.transaction(() => {
     for (const item of data.recipes) {
       try {
-        // 检查是否已存在同名菜谱（简单去重）
-        const existing = db
-          .prepare("SELECT id FROM recipes WHERE title = ? AND created_by_id = ? AND is_archived = 0")
-          .get(item.title, userId) as { id: string } | undefined;
-
-        if (existing) {
-          skipped++;
-          continue;
-        }
-
         // 处理分类
         let categoryId: string | null = null;
         if (item.categoryName) {
