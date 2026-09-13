@@ -30,13 +30,13 @@ export default async function DataPage() {
           <div className="rounded-lg bg-gray-50 p-4">
             <h3 className="font-bold text-gray-800">📤 导出菜谱</h3>
             <p className="mt-1 text-sm text-gray-600">
-              将所有菜谱导出为 JSON 格式文件，可用于备份或分享
+              将所有菜谱导出为 JSON 格式文件，包含封面图和步骤图，可用于备份或分享
             </p>
           </div>
           <div className="rounded-lg bg-gray-50 p-4">
             <h3 className="font-bold text-gray-800">📥 导入菜谱</h3>
             <p className="mt-1 text-sm text-gray-600">
-              从 JSON 文件导入菜谱，同名菜谱会自动跳过
+              从 JSON 文件导入菜谱，自动还原内嵌图片，同名菜谱会自动跳过
             </p>
           </div>
           <ImportExportButtons />
@@ -46,10 +46,10 @@ export default async function DataPage() {
       <div className="card p-5">
         <h2 className="mb-4 text-lg font-bold text-gray-800">说明</h2>
         <ul className="space-y-2 text-sm text-gray-600">
-          <li>• 导出文件包含菜谱标题、描述、食材、步骤等完整信息</li>
-          <li>• 导入时会自动创建不存在的分类</li>
+          <li>• 导出文件包含菜谱标题、描述、食材、步骤及封面图、步骤图等完整信息</li>
+          <li>• 导入时会自动创建不存在的分类，并还原内嵌图片</li>
           <li>• 同名菜谱会自动跳过，避免重复</li>
-          <li>• 图片不会导出（图片保存在本地）</li>
+          <li>• 图片以 base64 内嵌在导出文件中，单张不超过 5MB</li>
         </ul>
       </div>
     </div>
