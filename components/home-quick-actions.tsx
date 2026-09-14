@@ -9,16 +9,18 @@ const actions = [
 
 export function HomeQuickActions() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {actions.map(([href, title, desc, icon]) => (
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+      {actions.map(([href, title, desc, icon], i) => (
         <Link
-          className="card group p-6 transition hover:-translate-y-1 hover:shadow-lg"
+          className={`card card-hover group flex flex-col items-center p-4 text-center sm:flex-row sm:p-5 sm:text-left ${i >= 2 ? "animate-fade-up animate-fade-up-delay-1" : "animate-fade-up"}`}
           href={href}
           key={href}
         >
-          <div className="text-4xl transition-transform group-hover:scale-110">{icon}</div>
-          <div className="mt-3 text-xl font-black text-orange-700">{title}</div>
-          <p className="muted mt-1">{desc}</p>
+          <span className="text-3xl transition-transform group-hover:scale-110 sm:mr-3 sm:text-4xl">{icon}</span>
+          <span className="mt-2 sm:mt-0">
+            <span className="block text-base font-black text-orange-700 sm:text-lg">{title}</span>
+            <span className="mt-0.5 block text-xs muted sm:text-sm">{desc}</span>
+          </span>
         </Link>
       ))}
     </div>

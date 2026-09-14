@@ -6,22 +6,21 @@ import { UserMenu } from "@/components/user-menu";
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   return (
-    <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-4 pt-4 sm:px-6 lg:px-8 mobile-nav-safe">
-      <header className="mb-6 flex items-center justify-between rounded-3xl bg-white/90 px-5 py-3.5 shadow-sm ring-1 ring-orange-100 backdrop-blur-lg">
-        <Link href="/" className="flex items-center gap-2 text-2xl font-black text-orange-600 transition hover:text-orange-700">
-          <span className="text-3xl">🍲</span>
+    <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-4 pt-3 sm:px-6 sm:pt-5 lg:px-8 mobile-nav-safe">
+      <header className="sticky top-2 z-40 mb-4 flex items-center justify-between rounded-2xl bg-white/85 px-4 py-2.5 shadow-[0_2px_16px_-6px_rgba(146,64,14,0.18)] ring-1 ring-orange-100/80 backdrop-blur-xl sm:rounded-3xl sm:px-5 sm:py-3">
+        <Link href="/" className="flex items-center gap-2 text-xl font-black tracking-tight text-orange-600 transition hover:text-orange-700 sm:text-2xl">
+          <span className="text-2xl sm:text-3xl">🍲</span>
           <span>家味菜谱</span>
         </Link>
-        <div className="flex items-center gap-3 text-sm">
+        <div className="flex items-center gap-2 text-sm sm:gap-3">
           {user ? (
             <UserMenu username={user.username} role={user.role} />
           ) : (
-            <Link className="btn" href="/login">登录</Link>
+            <Link className="btn py-2" href="/login">登录</Link>
           )}
         </div>
       </header>
-      {/* pb-28 确保内容不被底部导航栏遮挡 */}
-      <main className="flex-1 pb-28">{children}</main>
+      <main className="flex-1">{children}</main>
       <MobileNav />
     </div>
   );

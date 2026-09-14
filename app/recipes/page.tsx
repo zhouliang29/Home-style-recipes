@@ -2,7 +2,6 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { listRecipes, getCategories } from "@/lib/recipes";
 import { RecipeOrderArea } from "@/components/recipe-order-area";
-import { PageTitle } from "@/components/ui-blocks";
 import { ImportExportButtons } from "@/components/import-export-button";
 import { CHEF_OPTIONS } from "@/lib/constants";
 
@@ -12,11 +11,49 @@ export default async function RecipesPage(props: { searchParams: Promise<{ q?: s
   const recipes = listRecipes({ userId: user.id, q, categoryId, chef });
   const allRecipes = listRecipes({ userId: user.id });
   const categories = getCategories();
-  return <div className="space-y-5"><PageTitle title="全部菜谱" subtitle="点击菜谱卡片右上角「+」点菜，选好后在浮窗生成本餐菜单" action={<div className="flex flex-wrap gap-2"><form action="/recipes" className="flex gap-2"><input className="field w-56" name="q" defaultValue={q} placeholder="搜索菜名或食材" /><button className="btn">搜索</button></form><ImportExportButtons /></div>} />
-    {/* 分类筛选 */}
-    <div className="flex flex-wrap gap-2">{categories.map((c) => <Link href={`/recipes?categoryId=${c.id}${chef ? `&chef=${encodeURIComponent(chef)}` : ""}`} className={"rounded-full px-3 py-1 font-bold ring-1 "+(c.id===categoryId?"bg-orange-500 text-white ring-orange-500":"bg-white text-orange-700 ring-orange-200")} key={c.id}>{c.icon && <span className="mr-0.5">{c.icon}</span>}{c.name}</Link>)}<Link href={chef ? `/recipes?chef=${encodeURIComponent(chef)}` : "/recipes"} className={"rounded-full px-3 py-1 font-bold ring-1 "+(categoryId?"bg-white text-orange-700 ring-orange-200":"bg-orange-500 text-white ring-orange-500")}>全部</Link></div>
-    {/* 厨师筛选 */}
-    <div className="flex flex-wrap gap-2">{CHEF_OPTIONS.map((c) => <Link href={`/recipes?chef=${encodeURIComponent(c)}${categoryId ? `&categoryId=${categoryId}` : ""}`} className={"rounded-full px-3 py-1 font-bold ring-1 "+(c===chef?"bg-amber-600 text-white ring-amber-600":"bg-amber-50 text-amber-800 ring-amber-200")} key={c}>👨‍🍳 {c}</Link>)}<Link href={categoryId ? `/recipes?categoryId=${categoryId}` : "/recipes"} className={"rounded-full px-3 py-1 font-bold ring-1 "+(chef?"bg-amber-50 text-amber-800 ring-amber-200":"bg-amber-600 text-white ring-amber-600")}>全部厨师</Link></div>
-    <RecipeOrderArea recipes={recipes} allRecipes={allRecipes} />
-  </div>;
+
+  const catHref = (id: string) => `/recipes?categoryId=${id}${chef ? `&chef=${encodeURIComponent(chef)}` : ""}`;
+  const chefHref = (c: string) => `/recipes?chef=${encodeURIComponent(c)}${categoryId ? `&categoryId=${categoryId}` : ""}`;
+
+  return (
+    <div className="space-y-4">
+      {/* 标题 + 导入导出 */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-black text-orange-700 sm:text-3xl">全部菜谱</h1>
+          <p className="mt-0.5 text-sm muted">点卡片右上角「+」选菜，攒一篮生成本餐菜单</p>
+        </div>
+        <ImportExportButtons />
+      </div>
+
+      {/* 搜索 */}
+      <form action="/recipes" className="flex gap-2">
+        <input className="field flex-1" name="q" defaultValue={q} placeholder="搜索菜名或食材…" enterKeyHint="search" />
+        {q && <Link className="btn secondary shrink-0" href="/recipes">清除</Link>}
+        <button className="btn shrink-0">搜索</button>
+      </form>
+
+      {/* 分类筛选：横滑胶囊 */}
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
+        <Link href={chef ? `/recipes?chef=${encodeURIComponent(chef)}` : "/recipes"} className={"chip shrink-0 " + (categoryId ? "" : "chip-active")}>全部</Link>
+        {categories.map((c) => (
+          <Link key={c.id} href={catHref(c.id)} className={"chip shrink-0 " + (c.id === categoryId ? "chip-active" : "")}>
+            {c.icon && <span>{c.icon}</span>}{c.name}
+          </Link>
+        ))}
+      </div>
+
+      {/* 厨师筛选 */}
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
+        <Link href={categoryId ? `/recipes?categoryId=${categoryId}` : "/recipes"} className={"chip chip-amber shrink-0 " + (chef ? "" : "chip-amber-active")}>全部厨师</Link>
+        {CHEF_OPTIONS.map((c) => (
+          <Link key={c} href={chefHref(c)} className={"chip chip-amber shrink-0 " + (c === chef ? "chip-amber-active" : "")}>
+            👨‍🍳 {c}
+          </Link>
+        ))}
+      </div>
+
+      <RecipeOrderArea recipes={recipes} allRecipes={allRecipes} />
+    </div>
+  );
 }
