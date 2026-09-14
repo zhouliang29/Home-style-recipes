@@ -22,7 +22,8 @@ export async function createSession(user: User) {
   store.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // 内网 HTTP 访问不能带 Secure（否则浏览器丢弃 cookie）；HTTPS 时在 .env 设 COOKIE_SECURE=true 启用
+    secure: process.env.COOKIE_SECURE === "true",
     path: "/",
     maxAge,
   });
