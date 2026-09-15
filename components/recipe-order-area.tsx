@@ -7,7 +7,9 @@ import { RecipeCard } from "@/components/recipe-card";
 
 const STORAGE_KEY = "meal-order-selected";
 
-export function RecipeOrderArea({ recipes, allRecipes }: { recipes: RecipeSummary[]; allRecipes: RecipeSummary[] }) {
+type Section = { id: string; label: string; recipes: RecipeSummary[] };
+
+export function RecipeOrderArea({ recipes, allRecipes, sections }: { recipes?: RecipeSummary[]; allRecipes: RecipeSummary[]; sections?: Section[] }) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
@@ -53,30 +55,63 @@ export function RecipeOrderArea({ recipes, allRecipes }: { recipes: RecipeSummar
 
   return (
     <>
-      <div className="grid-cards">
-        {recipes.map((r) => {
-          const selected = selectedIds.has(r.id);
-          return (
-            <div key={r.id} className="relative">
-              <RecipeCard recipe={r} />
-              <button
-                type="button"
-                onClick={() => toggle(r.id)}
-                className={`absolute right-1.5 top-1.5 flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold shadow-lg backdrop-blur transition active:scale-90 ${
-                  selected
-                    ? "bg-orange-500 text-white ring-2 ring-orange-300"
-                    : "bg-white/90 text-orange-600 ring-1 ring-orange-200"
-                }`}
-                aria-label={selected ? "取消点菜" : "点菜"}
-              >
-                {selected ? "✓" : "+"}
-              </button>
+      {sections ? (
+        // 分组视图：按左侧分类顺序分组，data-section-category 供滚动联动高亮
+        sections.map((sec) => (
+          <section key={sec.id} data-section-category={sec.id} className="scroll-mt-24">
+            <h2 className="section-title mb-2.5 text-lg">{sec.label}
+              <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-600">{sec.recipes.length}</span>
+            </h2>
+            <div className="grid-cards mb-5">
+              {sec.recipes.map((r) => {
+                const selected = selectedIds.has(r.id);
+                return (
+                  <div key={r.id} className="relative">
+                    <RecipeCard recipe={r} />
+                    <button
+                      type="button"
+                      onClick={() => toggle(r.id)}
+                      className={`absolute right-1.5 top-1.5 flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold shadow-lg backdrop-blur transition active:scale-90 ${
+                        selected
+                          ? "bg-orange-500 text-white ring-2 ring-orange-300"
+                          : "bg-white/90 text-orange-600 ring-1 ring-orange-200"
+                      }`}
+                      aria-label={selected ? "取消点菜" : "点菜"}
+                    >
+                      {selected ? "✓" : "+"}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
+          </section>
+        ))
+      ) : (
+        <div className="grid-cards">
+          {(recipes ?? []).map((r) => {
+            const selected = selectedIds.has(r.id);
+            return (
+              <div key={r.id} className="relative">
+                <RecipeCard recipe={r} />
+                <button
+                  type="button"
+                  onClick={() => toggle(r.id)}
+                  className={`absolute right-1.5 top-1.5 flex h-9 w-9 items-center justify-center rounded-full text-lg font-bold shadow-lg backdrop-blur transition active:scale-90 ${
+                    selected
+                      ? "bg-orange-500 text-white ring-2 ring-orange-300"
+                      : "bg-white/90 text-orange-600 ring-1 ring-orange-200"
+                  }`}
+                  aria-label={selected ? "取消点菜" : "点菜"}
+                >
+                  {selected ? "✓" : "+"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-      {recipes.length === 0 && (
+      {(sections ? sections.every((s) => s.recipes.length === 0) : (recipes ?? []).length === 0) && (
         <div className="card p-10 text-center">
           <div className="mb-3 text-5xl">🍽️</div>
           <div className="muted text-lg">没有找到菜谱。</div>

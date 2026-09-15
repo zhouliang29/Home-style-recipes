@@ -111,7 +111,7 @@ input, textarea, select, button { font: inherit; }
 }
 
 /* 食材行的主料/调料选择框：固定窄宽，压过 .field 的 width:100% */
-.field-ing-select { width: 70px !important; min-width: 70px; padding-left: .25rem; padding-right: 1.4rem; font-size: .75rem; }
+.field-ing-select { width: 65px !important; min-width: 65px; padding-left: .25rem; padding-right: 1.4rem; font-size: .75rem; }
 
 /* ===== 标签 / 文本 ===== */
 .label { display: grid; gap: .4rem; font-weight: 700; color: #7c2d12; font-size: .95rem; }

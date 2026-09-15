@@ -193,10 +193,11 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
               <select className="field field-ing-select shrink-0" value={item.group} onChange={(e) => updateIng(i, "group", e.target.value)}><option value="main">主料</option><option value="seasoning">调料</option></select>
               <input className="field min-w-0 flex-1" placeholder="做法用量，如：鸡蛋 2个 / 盐 2g" value={item.amount ? `${item.name} ${item.amount}` : item.name} onChange={(e) => {
                 const v = e.target.value;
-                // 拆分：名称 + 末尾用量（如 "鸡蛋 2个"）
+                // 拆分：名称 + 末尾用量（如 "鸡蛋 2个"），一次 setState 避免相互覆盖
                 const m = v.match(/^(.*?)[\s]+([^\s]+)$/);
-                updateIng(i, "name", m ? m[1] : v);
-                updateIng(i, "amount", m ? m[2] : "");
+                const copy = [...ingredients];
+                copy[i] = { ...copy[i], name: m ? m[1] : v, amount: m ? m[2] : "" };
+                setIngredients(copy);
               }} />
             </div>
             <button type="button" className="btn danger shrink-0 self-start px-3" onClick={() => removeIng(i)}>✕</button>
