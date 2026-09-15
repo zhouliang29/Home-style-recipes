@@ -8,7 +8,6 @@ const items = [
   ["/meal-order", "点菜", "📋"],
   ["/menu", "菜单", "📅"],
   ["/shopping", "购物", "🛒"],
-  ["/random", "随机", "🎲"],
 ];
 
 export function MobileNav() {

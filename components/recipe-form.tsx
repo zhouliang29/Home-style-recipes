@@ -1,9 +1,10 @@
 "use client";
 import { useState, useRef } from "react";
 import { PageTitle } from "@/components/ui-blocks";
+import Link from "next/link";
 import { CHEF_OPTIONS } from "@/lib/constants";
 import type { Category, RecipeDetail } from "@/lib/types";
-import { createCategoryAction } from "@/app/recipes/actions";
+import { ManageCategoryDialog } from "@/components/manage-category-dialog";
 
 type IngItem = { name: string; amount: string; group: "main" | "seasoning" };
 
@@ -42,10 +43,6 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
   const [imageFile, setImageFile] = useState<{ name: string; size: string } | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [categoryList, setCategoryList] = useState(categories);
-  const [showAddCategory, setShowAddCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [categoryError, setCategoryError] = useState<string | null>(null);
-  const categoryInputRef = useRef<HTMLInputElement>(null);
 
   function addIng(group: "main" | "seasoning") { setIngredients([...ingredients, { name: "", amount: "", group }]); }
   function updateIng(i: number, field: keyof IngItem, value: string) { const copy = [...ingredients]; copy[i] = { ...copy[i], [field]: value }; setIngredients(copy); }
@@ -130,7 +127,14 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-6" encType="multipart/form-data">
-      <PageTitle title={isEdit ? "编辑菜谱" : "新增菜谱"} />
+      <PageTitle
+        title={isEdit ? "编辑菜谱" : "新增菜谱"}
+        action={
+          <Link className="btn secondary py-2 text-sm" href={isEdit && recipe ? `/recipes/${recipe.id}` : "/recipes"}>
+            {isEdit ? "← 取消" : "← 返回"}
+          </Link>
+        }
+      />
 
       {/* 错误提示 */}
       {submitError && (
@@ -170,24 +174,9 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
         )}
         <div className="grid gap-4 sm:grid-cols-3"><label className="label">分类
           <div className="flex gap-2">
-            <select className="field flex-1" name="categoryId" defaultValue={recipe?.categoryId || ""}><option value="">不选</option>{categoryList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-            <button type="button" className="btn secondary shrink-0 px-3 text-sm" onClick={() => { setShowAddCategory(true); setTimeout(() => categoryInputRef.current?.focus(), 50); }} title="添加分类">+</button>
+            <select className="field min-w-0 flex-1" name="categoryId" defaultValue={recipe?.categoryId || ""}><option value="">不选</option>{categoryList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+            <ManageCategoryDialog categories={categoryList} onCategoriesChange={setCategoryList} />
           </div>
-          {showAddCategory && <div className="mt-1 flex gap-2">
-            <input ref={categoryInputRef} className="field flex-1 text-sm" value={newCategoryName} onChange={(e) => { setNewCategoryName(e.target.value); setCategoryError(null); }} placeholder="新分类名称" maxLength={20} />
-            <button type="button" className="btn shrink-0 px-3 text-sm" onClick={async () => {
-              const name = newCategoryName.trim();
-              if (!name) { setCategoryError("名称不能为空"); return; }
-              const result = await createCategoryAction(name);
-              if ("error" in result) { setCategoryError(result.error); return; }
-              setCategoryList([...categoryList, { id: result.id, name: result.name }]);
-              setNewCategoryName("");
-              setShowAddCategory(false);
-              setCategoryError(null);
-            }}>确定</button>
-            <button type="button" className="btn secondary shrink-0 px-3 text-sm" onClick={() => { setShowAddCategory(false); setNewCategoryName(""); setCategoryError(null); }}>取消</button>
-          </div>}
-          {categoryError && <span className="text-xs text-red-500">{categoryError}</span>}
         </label>
         <label className="label">难度<select className="field" name="difficulty" defaultValue={recipe?.difficulty || "easy"}><option value="easy">简单</option><option value="medium">中等</option><option value="hard">费工夫</option></select></label>
         <label className="label">厨师 <span className="text-red-500">*</span><select className="field" name="chef" defaultValue={recipe?.chef || ""}><option value="">请选择</option>{CHEF_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}</select></label></div>
@@ -200,17 +189,20 @@ export function RecipeForm({ categories, recipe }: { categories: Category[]; rec
       <section className="card p-5 space-y-3"><h2 className="font-black text-orange-700">食材（选填）</h2>
         {ingredients.map((item, i) => (
           <div className="grid gap-2 rounded-2xl bg-orange-50/60 p-3 sm:flex sm:gap-2 sm:bg-transparent sm:p-0" key={i}>
-            <div className="flex gap-2">
-              <select className="field w-20 shrink-0 sm:w-28" value={item.group} onChange={(e) => updateIng(i, "group", e.target.value)}><option value="main">主料</option><option value="seasoning">调料</option></select>
-              <input className="field flex-1" placeholder="名称" value={item.name} onChange={(e) => updateIng(i, "name", e.target.value)} />
+            <div className="flex flex-1 gap-2">
+              <select className="field field-ing-select shrink-0" value={item.group} onChange={(e) => updateIng(i, "group", e.target.value)}><option value="main">主料</option><option value="seasoning">调料</option></select>
+              <input className="field min-w-0 flex-1" placeholder="做法用量，如：鸡蛋 2个 / 盐 2g" value={item.amount ? `${item.name} ${item.amount}` : item.name} onChange={(e) => {
+                const v = e.target.value;
+                // 拆分：名称 + 末尾用量（如 "鸡蛋 2个"）
+                const m = v.match(/^(.*?)[\s]+([^\s]+)$/);
+                updateIng(i, "name", m ? m[1] : v);
+                updateIng(i, "amount", m ? m[2] : "");
+              }} />
             </div>
-            <div className="flex gap-2">
-              <input className="field flex-1 sm:w-28" placeholder="用量" value={item.amount} onChange={(e) => updateIng(i, "amount", e.target.value)} />
-              <button type="button" className="btn danger shrink-0 px-3" onClick={() => removeIng(i)}>✕</button>
-            </div>
+            <button type="button" className="btn danger shrink-0 self-start px-3" onClick={() => removeIng(i)}>✕</button>
           </div>
         ))}
-        <div className="flex flex-wrap gap-2"><button type="button" className="btn secondary" onClick={() => addIng("main")}>+ 添加主料</button><button type="button" className="btn secondary" onClick={() => addIng("seasoning")}>+ 添加调料</button></div>
+        <div className="flex flex-wrap gap-2"><button type="button" className="btn secondary" onClick={() => addIng("main")}>+ 添加食材</button></div>
       </section>
 
       {/* 做法步骤 */}

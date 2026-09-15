@@ -1,13 +1,10 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { getCategories } from "@/lib/recipes";
 import { HomeQuickActions } from "@/components/home-quick-actions";
 import { RecentRecipes } from "@/components/recent-recipes";
-import { CHEF_OPTIONS } from "@/lib/constants";
 
 export default async function Home() {
   await requireUser();
-  const categories = getCategories();
   return (
     <div className="space-y-7">
       {/* Hero 横幅 */}
@@ -36,36 +33,11 @@ export default async function Home() {
         <HomeQuickActions />
       </div>
 
-      {/* 分类入口 */}
+      {/* 最近添加 */}
       <section className="animate-fade-up animate-fade-up-delay-2">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="section-title">📂 分类</h2>
-          <Link className="text-sm font-bold text-orange-600 transition hover:text-orange-800" href="/recipes">全部菜谱 →</Link>
-        </div>
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
-          {categories.map((c) => (
-            <Link
-              className="chip shrink-0"
-              href={`/recipes?categoryId=${c.id}`}
-              key={c.id}
-            >
-              {c.icon && <span>{c.icon}</span>}{c.name}
-            </Link>
-          ))}
-        </div>
-        <div className="mt-2.5 flex flex-wrap gap-2">
-          {CHEF_OPTIONS.map((c) => (
-            <Link className="chip chip-amber shrink-0" href={`/recipes?chef=${encodeURIComponent(c)}`} key={c}>
-              👨‍🍳 {c}
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* 最近添加 */}
-      <section className="animate-fade-up animate-fade-up-delay-3">
-        <div className="mb-3 flex items-center justify-between">
           <h2 className="section-title">🕐 最近添加</h2>
+          <Link className="text-sm font-bold text-orange-600 transition hover:text-orange-800" href="/recipes">全部菜谱 →</Link>
         </div>
         <RecentRecipes />
       </section>

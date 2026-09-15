@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
-import { saveRecipe, archiveRecipe, toggleFavorite, logCooked, createCategory } from "@/lib/recipes";
+import { saveRecipe, archiveRecipe, toggleFavorite, logCooked, createCategory, renameCategory, deleteCategory, countRecipesByCategory } from "@/lib/recipes";
 import { saveRecipeImage } from "@/lib/image-upload";
 import { recipeInputSchema } from "@/lib/validators/recipe";
 import { ZodError } from "zod";
@@ -97,4 +97,38 @@ export async function createCategoryAction(name: string): Promise<{ id: string; 
     if (isNextInternalError(e)) throw e;
     return { error: e instanceof Error ? e.message : "创建分类失败" };
   }
+}
+
+export async function renameCategoryAction(id: string, name: string): Promise<{ ok: true; name: string } | { error: string }> {
+  try {
+    await requireUser();
+    const trimmed = name.trim();
+    if (!trimmed) return { error: "分类名称不能为空" };
+    if (trimmed.length > 20) return { error: "分类名称不能超过20个字" };
+    renameCategory(id, trimmed);
+    revalidatePath("/recipes");
+    revalidatePath("/recipes/new");
+    return { ok: true, name: trimmed };
+  } catch (e) {
+    if (isNextInternalError(e)) throw e;
+    return { error: e instanceof Error ? e.message : "重命名失败" };
+  }
+}
+
+export async function deleteCategoryAction(id: string): Promise<{ ok: true } | { error: string }> {
+  try {
+    await requireUser();
+    deleteCategory(id);
+    revalidatePath("/recipes");
+    revalidatePath("/recipes/new");
+    return { ok: true };
+  } catch (e) {
+    if (isNextInternalError(e)) throw e;
+    return { error: e instanceof Error ? e.message : "删除失败" };
+  }
+}
+
+export async function countRecipesInCategoryAction(id: string): Promise<number> {
+  await requireUser();
+  return countRecipesByCategory(id);
 }

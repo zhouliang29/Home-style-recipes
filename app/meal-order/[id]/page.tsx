@@ -45,7 +45,7 @@ export default async function MealOrderDetailPage(props: { params: Promise<{ id:
           {order.items.map((item, index) => (
             <Link
               key={item.id}
-              href={`/recipes/${item.recipeId}`}
+              href={`/recipes/${item.recipeId}?from=meal-order-${order.id}`}
               className="flex items-center gap-4 px-5 py-4 transition hover:bg-gray-50"
             >
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-bold text-gray-600">

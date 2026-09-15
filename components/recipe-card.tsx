@@ -3,10 +3,10 @@ import type { RecipeSummary } from "@/lib/types";
 
 const difficulty = { easy: "简单", medium: "中等", hard: "费工夫" } as const;
 
-export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
+export function RecipeCard({ recipe, from }: { recipe: RecipeSummary; from?: string }) {
   return (
     <Link
-      href={`/recipes/${recipe.id}`}
+      href={`/recipes/${recipe.id}${from ? `?from=${from}` : ""}`}
       className="card card-hover block overflow-hidden"
     >
       <div className="relative flex h-28 items-center justify-center bg-gradient-to-br from-orange-100 to-amber-50 text-4xl sm:h-40 sm:text-5xl">

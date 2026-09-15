@@ -35,6 +35,23 @@ export function createCategory(name: string): Category {
   return { id, name, sortOrder: (maxOrder.m ?? -1) + 1 };
 }
 
+export function renameCategory(id: string, name: string): void {
+  const res = db.prepare("UPDATE categories SET name = ? WHERE id = ?").run(name, id);
+  if (res.changes === 0) throw new Error("分类不存在");
+}
+
+export function deleteCategory(id: string): void {
+  // 该分类下的菜谱先置为未分类，避免悬挂引用
+  db.prepare("UPDATE recipes SET category_id = NULL WHERE category_id = ?").run(id);
+  const res = db.prepare("DELETE FROM categories WHERE id = ?").run(id);
+  if (res.changes === 0) throw new Error("分类不存在");
+}
+
+export function countRecipesByCategory(id: string): number {
+  const row = db.prepare("SELECT COUNT(*) as c FROM recipes WHERE category_id = ? AND is_archived = 0").get(id) as { c: number };
+  return row.c;
+}
+
 export function listRecipes(options: { userId?: string; q?: string; categoryId?: string; chef?: string; favoritesOnly?: boolean } = {}) {
   const args: unknown[] = [];
   let where = "r.is_archived = 0";

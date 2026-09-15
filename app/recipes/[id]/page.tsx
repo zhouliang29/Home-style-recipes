@@ -7,11 +7,17 @@ import Link from "next/link";
 
 const difficulty = { easy: "简单", medium: "中等", hard: "费工夫" } as const;
 
-export default async function RecipeDetailPage(props: { params: Promise<{ id: string }> }) {
+export default async function RecipeDetailPage(props: { params: Promise<{ id: string }>; searchParams: Promise<{ from?: string }> }) {
   const user = await requireUser();
   const { id } = await props.params;
+  const { from } = await props.searchParams;
   const recipe = getRecipe(id, user.id);
   if (!recipe) notFound();
+
+  // 来源是本餐菜单时返回本餐菜单，首页最近添加时返回首页
+  const fromOrder = from?.startsWith("meal-order-") ? from.slice("meal-order-".length) : null;
+  const backHref = fromOrder ? `/meal-order/${fromOrder}` : from === "home" ? "/" : "/recipes";
+  const backLabel = fromOrder ? "← 本餐菜单" : from === "home" ? "← 返回最近添加" : "← 菜谱";
 
   const metaTags = [
     { icon: "📊", text: difficulty[recipe.difficulty] },
@@ -25,7 +31,7 @@ export default async function RecipeDetailPage(props: { params: Promise<{ id: st
     <div className="space-y-5">
       {/* 顶部：返回 + 操作 */}
       <div className="flex items-center justify-between gap-2">
-        <Link className="btn secondary py-2 text-sm" href="/recipes">← 菜谱</Link>
+        <Link className="btn secondary py-2 text-sm" href={backHref}>{backLabel}</Link>
         <div className="flex gap-2">
           {canEditRecipe(user, recipe) && (
             <Link className="btn secondary py-2 text-sm" href={`/recipes/${id}/edit`}>✏️ 编辑</Link>
